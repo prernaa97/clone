@@ -18,5 +18,7 @@ const subscriptionSchema = new mongoose.Schema({
   paymentId: { type: String }, // Razorpay/Stripe txn id
 });
 
-export default mongoose.model("Subscription", subscriptionSchema);
+const Subscription = mongoose.model("Subscription", subscriptionSchema);
+export default Subscription;
+
 

@@ -1,19 +1,14 @@
 import express from "express";
 import {
-  createDoctorProfile,
-  getAllProfiles,
-  getProfileById,
-  updateDoctorProfile,
-  deleteDoctorProfile
+  submitDoctorProfile,
+  approveDoctorProfile,
+  rejectDoctorProfile,
 } from "../controllers/profileController.js";
 
 const router = express.Router();
 
-// Routes
-router.post("/", createDoctorProfile);         // Create profile
-router.get("/", getAllProfiles);               // Get all profiles
-router.get("/:id", getProfileById);            // Get single profile
-router.put("/:id", updateDoctorProfile);       // Update profile
-router.delete("/:id", deleteDoctorProfile);    // Delete profile
+router.post("/submit", submitDoctorProfile);
+router.put("/:id/approve", approveDoctorProfile);
+router.put("/:id/reject", rejectDoctorProfile);
 
 export default router;

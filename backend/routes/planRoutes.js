@@ -1,12 +1,23 @@
 import express from "express";
-import { createPlan, getAllPlans, getPlanById, updatePlan, deletePlan } from "../controllers/planController.js";
+import {
+  getAllPlans,
+  createPlan,
+  deletePlan,
+  getPlanById,
+} from "../controllers/planController.js";
 
 const router = express.Router();
 
-router.post("/", createPlan);      // Admin create plan
-router.get("/", getAllPlans);      // All users can see plans
-router.get("/:id", getPlanById);   // Get single plan
-router.put("/:id", updatePlan);    // Admin update plan
-router.delete("/:id", deletePlan); // Admin delete plan
+// GET all plans
+router.get("/", getAllPlans);
+
+// CREATE or UPDATE plan
+router.post("/manage", createPlan);
+
+// SOFT DELETE plan
+router.delete("/:id", deletePlan);
+
+// GET single plan
+router.get("/:id", getPlanById);
 
 export default router;

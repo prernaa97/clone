@@ -1,6 +1,6 @@
 import express from "express";
 import {
-  createDoctor,
+createSubscription,
   getAllDoctors,
   getDoctorById,
   updateDoctor,
@@ -9,7 +9,7 @@ import {
 
 const router = express.Router();
 
-router.post("/", createDoctor);       // Create
+router.post("/createSubscription", createSubscription);       // Create
 router.get("/", getAllDoctors);       // Read all
 router.get("/:id", getDoctorById);    // Read one
 router.put("/:id", updateDoctor);     // Update

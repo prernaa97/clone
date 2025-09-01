@@ -1,4 +1,4 @@
-import Plan from "../models/Plan.js";
+import Plan from "../models/plan.js";
 
 // Create Plan (Admin Only)
 export const createPlan = async (req, res) => {

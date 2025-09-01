@@ -1,5 +1,4 @@
 import DoctorPost from "../models/doctorPost.js";
-import DoctorPost from "../models/doctorPost.js";
 import Subscription from "../models/Subscription.js";
 
 // ✅ Create Post with subscription check + media upload
