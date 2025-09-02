@@ -42,15 +42,21 @@ export const paymentVerification = async (req, res) => {
       return res.status(400).json({ success: false, message: "Missing required payment fields" });
     }
 
-    const body = `${razorpay_order_id}|${razorpay_payment_id}`;
+    // const body = `${razorpay_order_id}|${razorpay_payment_id}`;
+    const body = `${razorpay_order_id.trim()}|${razorpay_payment_id.trim()}`;
+    console.log("Body:", body);
+
     const expected = crypto
       .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
       .update(body)
       .digest("hex");
 
+    console.log("Expected Signature:", expected);
+
     if (expected !== razorpay_signature) {
       return res.status(400).json({ success: false, message: "Invalid signature" });
     }
+    console.log("Received Signature:", razorpay_signature);
 
     await session.startTransaction();
 

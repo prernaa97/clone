@@ -3,7 +3,7 @@ import dotenv from "dotenv";
 import express from "express";
 import bodyParser from "body-parser";
 import connectDB from "./config/db.js";
-
+import clinicRoutes from "./routes/clinicRoutes.js"
 import cors from "cors";
 
 import doctorRoutes from "./routes/doctorRoutes.js";
@@ -49,6 +49,7 @@ app.use("/api/appointments", appointmentRoutes);
 app.use("/api/subscription", subscriptionRoutes);
 app.use("/api/plan", planRoutes);
 app.use("/api/payment", paymentRoutes);
+app.use("/api/clinic", clinicRoutes);
 
 // ===== Start Server =====
 app.listen(5000, () => console.log("Server running on port 5000"));

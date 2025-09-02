@@ -1,6 +1,6 @@
 import express from "express";
 import {
-  createSlot,
+  createClinicWithSlots,
   createManySlots,
   getSlotsByDoctor,
   getSlotById,
@@ -11,7 +11,9 @@ import {
 const router = express.Router();
 
 // create single slot
-router.post("/", createSlot);
+// router.post("/", createSlot);
+router.post("/createClinicWithSlots", createClinicWithSlots);
+
 
 // optional: bulk create
 router.post("/bulk", createManySlots);
