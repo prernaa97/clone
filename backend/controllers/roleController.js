@@ -19,9 +19,9 @@ export const createRole = async (req, res) => {
       });
     }
 
-    return res.status(201).json({ success: true, role });
+    return res.status(201).json({ success: true, role }); 
   } catch (err) {
-    return res.status(500).json({ success: false, error: err.message });
+    return res.status(500).json({ success: false, error: err.message });  
   }
 };
 // Assign Role to User

@@ -39,9 +39,11 @@ export const createSubscription = async (req, res) => {
       await session.abortTransaction();
       return res.status(409).json({ success: false, message: "Active subscription already exists" });
     }
-
+        const startDate = new Date();
+        const endDate = new Date();
+        endDate.setDate(startDate.getDate() + plan.days); //  plan duration
     const [subscription] = await Subscription.create(
-      [{ doctorId, planId, isActive: false, postsUsed: 0 }],
+      [{ doctorId, planId, isActive: false, postsUsed: 0 ,startDate, endDate}],
       { session }
     );
 
@@ -62,7 +64,7 @@ export const createSubscription = async (req, res) => {
 //  Get All Doctors
 export const getAllDoctors = async (req, res) => {
   try {
-    const doctors = await Doctor.find();
+    const doctors = await DoctorProfile.find();
     res.status(200).json({ success: true, count: doctors.length, data: doctors });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -72,7 +74,7 @@ export const getAllDoctors = async (req, res) => {
 // ✅ Get Doctor by ID
 export const getDoctorById = async (req, res) => {
   try {
-    const doctor = await Doctor.findById(req.params.id);
+    const doctor = await DoctorProfile.findById(req.params.id);
     if (!doctor) {
       return res.status(404).json({ success: false, message: "Doctor not found" });
     }
@@ -85,7 +87,7 @@ export const getDoctorById = async (req, res) => {
 // ✅ Update Doctor
 export const updateDoctor = async (req, res) => {
   try {
-    const doctor = await Doctor.findByIdAndUpdate(req.params.id, req.body, {
+    const doctor = await DoctorProfile.findByIdAndUpdate(req.params.id, req.body, {
       new: true,
       runValidators: true,
     });
@@ -101,7 +103,7 @@ export const updateDoctor = async (req, res) => {
 // ✅ Delete Doctor
 export const deleteDoctor = async (req, res) => {
   try {
-    const doctor = await Doctor.findByIdAndDelete(req.params.id);
+    const doctor = await DoctorProfile.findByIdAndDelete(req.params.id);
     if (!doctor) {
       return res.status(404).json({ success: false, message: "Doctor not found" });
     }

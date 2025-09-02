@@ -11,11 +11,17 @@ import UserRole from "../models/userRoles.js";
 export const checkout = async (req, res) => {
   try {
     const { amount, currency = "INR" } = req.body;
-    if (typeof amount !== "number" || amount <= 0) {
-      return res.status(400).json({ success: false, message: "amount must be a positive number" });
-    }
+    const parsedAmount = Number(amount);
+    console.log("Amount received:", amount, typeof amount);
+
+    if (typeof parsedAmount !== "number" || parsedAmount <= 0) {
+   return res.status(400).json({ success: false, message: "amount must be a positive number" });
+  }
+    // Razorpay ka orders.create() call hota hai, jisme: amount paise me dena padta hai (1 INR rupee= 100 paise).
+    // Isiliye Math.round(amount * 100) kiya gaya hai. Agar tum 500 bhejte ho to ye 50000 ban jayega (Razorpay ko paise me dena compulsory hai).
+    // currency INR ya USD etc.
     const order = await razorpay.orders.create({
-      amount: Math.round(amount * 100),
+      amount: Math.round(parsedAmount * 100), //(500rs * 100) = 50000 paise
       currency
     });
     return res.status(200).json({ success: true, order });
@@ -27,6 +33,8 @@ export const checkout = async (req, res) => {
 // Body: { razorpay_order_id, razorpay_payment_id, razorpay_signature, amount, sub_id }
 export const paymentVerification = async (req, res) => {
   const session = await mongoose.startSession();
+  //User jab pay karega (card/UPI/netbanking se), Razorpay 2 values return karega:
+  //razorpay_payment_id → ek unique ID (jaise pay_LkXyz123) , razorpay_signature
   try {
     const { razorpay_order_id, razorpay_payment_id, razorpay_signature, amount, sub_id } = req.body;
 

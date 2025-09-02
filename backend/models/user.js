@@ -91,7 +91,7 @@ const userSchema = new Schema({
             }
         },   
 },
-{timestamps:true})
+{timestamps:true})                 
 
 //  Password checking helper
 userSchema.methods.checkPassword = function (plainPassword) {
