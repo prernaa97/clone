@@ -1,5 +1,7 @@
 import express from "express";
 import multer from "multer";
+import fs from "fs";
+import path from "path";
 import {
   createPost,
   getPosts,
@@ -7,21 +9,30 @@ import {
   updatePost,
   deletePost,
 } from "../controllers/postController.js";
+import { ensureDoctorWithActiveSubscription, validatePostPayload , requireAuth } from "../middlewares/postGuards.js";
 
 const router = express.Router();
 
 // Multer setup
+const uploadDir = path.join(process.cwd(), "uploads");
+try {
+  fs.mkdirSync(uploadDir, { recursive: true });
+} catch (e) {
+  // ignore mkdir errors; will fail later in destination if truly not writable
+}
+
 const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, "uploads/"),
+  destination: (req, file, cb) => cb(null, uploadDir),
   filename: (req, file, cb) => cb(null, Date.now() + "-" + file.originalname),
 });
 const upload = multer({ storage });
 
 // Routes
-router.post("/", upload.array("media", 5), createPost); // multiple media files
+router.use(requireAuth);
+router.post("/", ensureDoctorWithActiveSubscription, upload.array("media", 5), validatePostPayload, createPost); // multiple media files
 router.get("/", getPosts);
 router.get("/:id", getPostById);
-router.put("/:id", updatePost);
+router.put("/:id", ensureDoctorWithActiveSubscription, upload.array("media", 5), validatePostPayload, updatePost);
 router.delete("/:id", deletePost);
 
 export default router;

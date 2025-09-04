@@ -13,7 +13,7 @@ const appointmentSchema = new mongoose.Schema({
     default: "pending"
   },
 
-  fee: { type: Number, required: true },
+  // fee: { type: Number, required: true },
   paymentId: { type: String },               // payment gateway id
   paymentStatus: { type: String, enum: ["pending","paid","refunded"], default: "pending" },
 

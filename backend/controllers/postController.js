@@ -1,51 +1,42 @@
 import DoctorPost from "../models/doctorPost.js";
 import Subscription from "../models/Subscription.js";
 
-// ✅ Create Post with subscription check + media upload
+//  Create Post with subscription check + media upload
 export const createPost = async (req, res) => {
   try {
-    const doctorId = req.user.id; // doctor ka id token se aa raha hai
-    const { title, description, type, status } = req.body;
+    const doctorId = req.user.id;
+    const { title, description, mediaType, status = "draft", videoUrl } = req.body;
 
-    // 🔹 active subscription find karo
-    let subscription = await Subscription.findOne({ doctorId, isActive: true }).populate("planId");
-
-    if (!subscription) {
-      return res.status(403).json({ success: false, message: "No active subscription found" });
-    }
-
-    // 🔹 expiry check
+    const subscription = req.postGuard?.subscription || await Subscription.findOne({ doctorId, isActive: true }).populate("planId");
+    if (!subscription) return res.status(403).json({ success: false, message: "No active subscription found" });
     if (new Date() > subscription.endDate) {
-      subscription.isActive = false;
-      await subscription.save();
+      subscription.isActive = false; await subscription.save();
       return res.status(403).json({ success: false, message: "Subscription expired" });
     }
-
-    // 🔹 post limit check
     if (subscription.postsUsed >= subscription.planId.postLimit) {
       return res.status(403).json({ success: false, message: "Post limit reached for your plan" });
     }
 
-    // 🔹 media files handle karo
+    // Prepare media
     let mediaFiles = [];
-    if (req.files && req.files.length > 0) {
-      mediaFiles = req.files.map((file) => ({
-        url: `/uploads/${file.filename}`,
-        type: file.mimetype.startsWith("video") ? "video" : "image",
-      }));
+    if (mediaType === "video") {
+      if (!videoUrl) return res.status(400).json({ success: false, message: "videoUrl is required for video post" });
+      mediaFiles = [videoUrl];
+    } else {
+      if (req.files && req.files.length > 0) {
+        mediaFiles = req.files.map((file) => `/uploads/${file.filename}`);
+      }
     }
 
-    // 🔹 post create karo
     const post = await DoctorPost.create({
       doctor: doctorId,
       title,
       description,
       media: mediaFiles,
-      type,
+      mediaType: mediaType || (req.files?.length ? "image" : "image"),
       status,
     });
 
-    // 🔹 postsUsed update karo
     subscription.postsUsed += 1;
     await subscription.save();
 
@@ -56,7 +47,7 @@ export const createPost = async (req, res) => {
   }
 };
 
-// ✅ Get all posts
+// Get all posts
 export const getPosts = async (req, res) => {
   try {
     const posts = await DoctorPost.find().populate("doctor", "name email");
@@ -80,7 +71,11 @@ export const getPostById = async (req, res) => {
 // ✅ Update post
 export const updatePost = async (req, res) => {
   try {
-    const post = await DoctorPost.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    const updates = { ...req.body };
+    if (updates.status && !["draft", "published", "archived"].includes(updates.status)) {
+      return res.status(400).json({ success: false, message: "Invalid status" });
+    }
+    const post = await DoctorPost.findByIdAndUpdate(req.params.id, updates, { new: true });
     if (!post) return res.status(404).json({ success: false, message: "Post not found" });
     res.status(200).json({ success: true, data: post });
   } catch (err) {

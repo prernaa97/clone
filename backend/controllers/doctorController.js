@@ -84,6 +84,32 @@ export const getDoctorById = async (req, res) => {
   }
 };
 
+// Login helper: subscription status for renewal prompt
+export const getSubscriptionStatus = async (req, res) => {
+  try {
+    const { doctorId } = req.query;
+    if (!doctorId) return res.status(400).json({ success: false, message: "doctorId is required" });
+
+    const now = new Date();
+    const subs = await Subscription.find({ doctorId }).sort({ endDate: -1 }).limit(1);
+    if (!subs || subs.length === 0) {
+      return res.status(200).json({ success: true, hasActive: false, needsRenewal: true });
+    }
+    const s = subs[0];
+    const hasActive = s.isActive && s.endDate >= now;
+    const daysLeft = Math.ceil((new Date(s.endDate).getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+    return res.status(200).json({
+      success: true,
+      hasActive,
+      needsRenewal: !hasActive,
+      endDate: s.endDate,
+      daysLeft: hasActive ? Math.max(daysLeft, 0) : 0
+    });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 // ✅ Update Doctor
 export const updateDoctor = async (req, res) => {
   try {

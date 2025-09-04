@@ -8,7 +8,7 @@ import Appointment from "../models/Appointment.js";
  * This function tries to safely mark slot as booked and create appointment.
  */
 export const bookAppointment = async (req, res) => {
-  const { slotId, userId, type, fee, paymentId } = req.body;
+  const { slotId, userId, type, paymentId } = req.body;
 
   // prefer transactions if replica set available
   const session = await mongoose.startSession();
@@ -34,7 +34,6 @@ export const bookAppointment = async (req, res) => {
       userId,
       type,
       status: "confirmed",
-      fee,
       paymentId,
       paymentStatus: paymentId ? "paid" : "pending",
       bookedAt: new Date()
@@ -63,7 +62,6 @@ export const bookAppointment = async (req, res) => {
         userId,
         type,
         status: "confirmed",
-        fee,
         paymentId,
         paymentStatus: paymentId ? "paid" : "pending",
         bookedAt: new Date()

@@ -83,13 +83,13 @@ export const signIn = async (req, res) => {
     const isMatch = user.checkPassword(password);
     if (!isMatch) {
       user.failedLoginAttempts += 1;
-      await user.save();
+      await user.save({ validateBeforeSave: false });
       return res.status(401).json({ error: "Invalid email or password" });
     }
 
     // reset failed attempts on success
     user.failedLoginAttempts = 0;
-    await user.save();
+    await user.save({ validateBeforeSave: false });
 
     const payload = { sub: user._id.toString(), name: user.name, email: user.email };
     const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: "24h" });

@@ -11,8 +11,8 @@ import UserRole from "../models/userRoles.js";
 export const checkout = async (req, res) => {
   try {
     const { amount, currency = "INR" } = req.body;
-    const parsedAmount = Number(amount);
     console.log("Amount received:", amount, typeof amount);
+    const parsedAmount = Number(amount);
 
     if (typeof parsedAmount !== "number" || parsedAmount <= 0) {
    return res.status(400).json({ success: false, message: "amount must be a positive number" });
@@ -26,6 +26,7 @@ export const checkout = async (req, res) => {
     });
     return res.status(200).json({ success: true, order });
   } catch (err) {
+    console.log(err);
     return res.status(500).json({ success: false, message: err.message });
   }
 };

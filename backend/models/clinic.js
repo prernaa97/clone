@@ -56,6 +56,18 @@ consultationFee: {
         message: props => `${props.value} contains invalid day(s)`
       }
     },
+    slotDuration: {
+      type: Number,
+      required: [true, "Slot duration (minutes) is required"],
+      min: [5, "Slot duration must be at least 5 minutes"],
+      max: [720, "Slot duration cannot exceed 720 minutes (12 hours)"],
+      validate: {
+        validator: function (v) {
+          return Number.isInteger(v) && v > 0 && v % 5 === 0;
+        },
+        message: props => `${props.value} is not valid (must be a positive multiple of 5 minutes)`
+      }
+    },
     startTime: {
       type: String,
       required: [true, "Start time is required"],

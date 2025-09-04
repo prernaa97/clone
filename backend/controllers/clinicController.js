@@ -1,6 +1,7 @@
 import Clinic from "../models/clinic.js";
 import mongoose from "mongoose";
 import Subscription from "../models/Subscription.js";
+import DoctorProfile from "../models/doctorProfile.js";
 
 // Create a new clinic
 export const createClinic = async (req, res) => {
@@ -12,12 +13,12 @@ export const createClinic = async (req, res) => {
       return res.status(400).json({ success: false, message: "All required fields must be provided" });
     }
     if (typeof consultationFee !== "number" || consultationFee <= 0) {
-   return res.status(400).json({ success: false, message: "amount must be a positive number" });
-  }
- if (!mongoose.Types.ObjectId.isValid(doctorId)) {
+      return res.status(400).json({ success: false, message: "amount must be a positive number" });
+    }
+    if (!mongoose.Types.ObjectId.isValid(doctorId)) {
       return res.status(400).json({ success: false, message: "Invalid doctorId" });
     }
-    var clinicExist = await Clinic.findOne({ doctorId: req.body.doctorId });
+  var clinicExist = await Clinic.findOne({ doctorId: req.body.doctorId });
 
     // if (clinicExist) {
     // return res.status(400).json({ success: false, message: "Only one clinic can be registered per doctor" });
@@ -25,12 +26,18 @@ export const createClinic = async (req, res) => {
    const data = await Subscription.findOne();
     console.log("DoctorId: ", data?.doctorId);
 
-const subscription = await Subscription.findOne({ doctorId: req.body.doctorId}, {isActive: false});
-    console.log("subscription: ",subscription);
+    // Profile must be approved
+    const profile = await DoctorProfile.findOne({ userId: doctorId });
+    if (!profile || profile.status !== "Approved") {
+      return res.status(403).json({ success: false, message: "Doctor profile is not approved" });
+    }
 
-if (!subscription) {
-    return res.status(404).json({ success: false, message: "Doctor does not have an active subscription" });
-}
+    // Active subscription required
+    const now = new Date();
+    const subscription = await Subscription.findOne({ doctorId, isActive: true, endDate: { $gte: now } });
+    if (!subscription) {
+      return res.status(404).json({ success: false, message: "Doctor does not have an active subscription" });
+    }
 
     const newClinic = new Clinic({
       doctorId,
