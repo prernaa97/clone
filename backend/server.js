@@ -44,7 +44,7 @@ app.use("/uploads", express.static("uploads")); // serve media files
 app.use("/api/doctors", doctorRoutes);
 app.use("/api/profiles", doctorProfileRoutes);
 app.use("/api/posts", doctorPostRoutes);
-app.use("/api/slots", slotRoutes);
+app.use("/api/slots", slotRoutes); //temp
 app.use("/api/appointments", appointmentRoutes);
 app.use("/api/subscription", subscriptionRoutes);
 app.use("/api/plan", planRoutes);

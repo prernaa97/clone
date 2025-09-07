@@ -30,8 +30,8 @@ const upload = multer({ storage });
 // Routes
 router.use(requireAuth);
 router.post("/", ensureDoctorWithActiveSubscription, upload.array("media", 5), validatePostPayload, createPost); // multiple media files
-router.get("/", getPosts);
-router.get("/:id", getPostById);
+router.get("/doctor/:doctorId", getPosts);
+router.get("/post/:postId", getPostById);
 router.put("/:id", ensureDoctorWithActiveSubscription, upload.array("media", 5), validatePostPayload, updatePost);
 router.delete("/:id", deletePost);
 

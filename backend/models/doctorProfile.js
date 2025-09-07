@@ -4,16 +4,23 @@ import validator from "validator";
 
 const profileSchema = new mongoose.Schema(
   {
+    _id: {   // use userId as the primary key
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
     userId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
       unique: true,
     },
-    doctorId: {
-      type: mongoose.Schema.Types.ObjectId,
-      required: true,
-    },
+    // doctorId: {
+    //   type: mongoose.Schema.Types.ObjectId,
+    //   required: true,
+    //   ref: "User",
+    //   unique:true
+    // },
 
     name: {
       type: String,

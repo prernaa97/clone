@@ -1,19 +1,25 @@
 import DoctorProfile from "../models/doctorProfile.js";
+import User from "../models/user.js";
 
 export const submitDoctorProfile = async (req, res) => {
   try {
     const { userId, ...profileData } = req.body;
+    console.log("submitDoctorProfile: ",req.body);
     if (!userId) {
       return res.status(400).json({ success: false, message: "userId is required" });
     }
+    const user = await User.findOne({ _id: userId });
+    console.log(user._id);
+    if(!user){
+      return res.status(400).json({ success: false, message: "UserId not Exists" });
+    }
 
     const profile = await DoctorProfile.findOneAndUpdate(
-      { userId },
+      { _id: userId },
       {
         $set: {
           ...profileData,
-          userId,
-          doctorId: userId,
+           userId: user._id,
           isProfileRequest: true,
           status: "pending",
         },

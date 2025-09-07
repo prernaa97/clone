@@ -75,7 +75,7 @@ export const getClinicById = async (req, res) => {
 
     const clinic = await Clinic.findById(id).populate("doctorId", "name email");
     if (!clinic) return res.status(404).json({ success: false, message: "Clinic not found" });
-
+    console.log("Clinic DocterId: ". clinic);
     res.status(200).json({ success: true, data: clinic });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });

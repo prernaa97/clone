@@ -4,7 +4,7 @@ const postSchema = new mongoose.Schema(
   {
     doctor: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Doctor", // One-to-Many relation (ek doctor ke multiple posts)
+      ref: "DoctorProfile", // One-to-Many relation (ek doctor ke multiple posts)
       required: true,
     },
     title: {
@@ -19,6 +19,7 @@ const postSchema = new mongoose.Schema(
     media: [
       {
         type: String, // yaha sirf file ka path/url save hoga (image/video dono ka)
+        required: true
       },
     ],
     mediaType: {

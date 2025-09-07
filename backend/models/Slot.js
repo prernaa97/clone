@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 
 const slotSchema = new mongoose.Schema({
-  doctorId: { type: mongoose.Schema.Types.ObjectId, ref: "Doctor", required: true, index: true },
+  doctorId: { type: mongoose.Schema.Types.ObjectId, ref: "DoctorProfile", required: true, index: true },
   clinicId: { type: mongoose.Schema.Types.ObjectId, ref: "Clinic", required: true, index: true },
   start: { type: Date, required: true, index: true },   // slot start time (UTC)
   end: { type: Date, required: true },                  // slot end time (UTC)
