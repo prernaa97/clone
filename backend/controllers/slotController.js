@@ -44,7 +44,12 @@ export const createClinicWithSlots = async (req, res) => {
       await session.abortTransaction();
       return res.status(400).json({ success: false, message: "clinicTiming requires days, startTime, endTime, slotDuration" });
     }
+    
+      var clinicExist = await Clinic.findOne({ doctorId: req.body.doctorId });
 
+    if (clinicExist) {
+    return res.status(400).json({ success: false, message: "Only one clinic can be registered per doctor" });
+    }
     // Check doctor profile is approved
     const profile = await DoctorProfile.findOne({ userId: doctorId });
     if (!profile || profile.status !== "Approved") {

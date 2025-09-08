@@ -8,6 +8,7 @@ import jwt from "jsonwebtoken";
 export const requireAuth = (req, res, next) => {
   try {
     const auth = req.headers.authorization || "";
+    console.log("Token from Auth: ", auth);
     const token = auth.startsWith("Bearer ") ? auth.slice(7) : null;
     if (!token) {
       return res.status(401).json({ success: false, message: "Unauthorized: No token provided" });
@@ -43,7 +44,7 @@ export const ensureDoctorWithActiveSubscription = async (req, res, next) => {
       return res.status(403).json({ success: false, message: "Only doctors can create or update posts" });
     }
 
-    // Active subscription check
+    // Active subscription check 
     const now = new Date();
     let subscription = await Subscription.findOne({ doctorId: currentUserId, isActive: true }).populate("planId");
     if (!subscription) {
@@ -66,7 +67,7 @@ export const ensureDoctorWithActiveSubscription = async (req, res, next) => {
 // Validate media and status transitions for posts
 export const validatePostPayload = (req, res, next) => {
   try {
-    const body = req.body || {};
+    const body = req.body || {}; // model parameter
     const status = body.status; // draft | published | archived
 
     if (status && !["draft", "published", "archived"].includes(status)) {

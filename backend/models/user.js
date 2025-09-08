@@ -81,15 +81,15 @@ const userSchema = new Schema({
         }
     },
     
-    dateOfBirth:{
-            type:String,
-              required: true,
-            trim: true,
-            validate:{
-                validator:validateDob,
-                message:"Date of Birth must be in the format dd/mm/yyyy and in the past"
-            }
-        },   
+    // dateOfBirth:{
+    //         type:String,
+    //           required: true,
+    //         trim: true,
+    //         validate:{
+    //             validator:validateDob,
+    //             message:"Date of Birth must be in the format dd/mm/yyyy and in the past"
+    //         }
+    //     },   
 },
 {timestamps:true})                 
 

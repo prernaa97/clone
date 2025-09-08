@@ -1,35 +1,48 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { Route, Routes } from 'react-router-dom';
+import { Suspense, lazy } from 'react';
+import Auth from './authentication/auth';
+import DoctorProfile from './DoctorProfile';
+import AdminProfileRequests from './components/AdminProfileRequests';
+import ProfileStatus from './components/ProfileStatus';
+import AdminPlans from './components/AdminPlans';
+import Subscription from './components/Subscription';
+const Dashboard = lazy(() => import('./Dashboard'));
 
 function App() {
-  const [count, setCount] = useState(0)
-
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    <Suspense fallback={null}>
+      <Routes>
+        {/* Auth route: no dashboard wrapper, only auth.css applies */}
+        <Route path="/" element={<Auth />} />
+
+        {/* App routes: wrapped by Dashboard, global style.css applies when Dashboard is loaded */}
+        <Route element={<Dashboard /> }>
+          <Route path="/doctor-profile" element={<DoctorProfile />} />
+          {/* <Route path="/profile-status" element={<ProfileStatus />} /> */}
+          <Route path="/admin/profile-requests" element={<AdminProfileRequests />} />
+          
+          {/* Doctor Routes */}
+          <Route path="/subscription" element={<Subscription />} />
+          <Route path="/upgrade-plan" element={<div className="p-4">Upgrade Plan Page</div>} />
+          <Route path="/appointments" element={<div className="p-4">Appointments Page</div>} />
+          <Route path="/slots" element={<div className="p-4">Slot Management Page</div>} />
+          <Route path="/clinic" element={<div className="p-4">Clinic Information Page</div>} />
+
+          {/* Admin Routes */}
+          <Route path="/admin/patients" element={<div className="p-4">Patient Management Page</div>} />
+          <Route path="/admin/plans" element={<AdminPlans />} />
+          <Route path="/admin/doctors" element={<div className="p-4">Doctors & Subscriptions Page</div>} />
+
+          {/* Patient Routes */}
+          <Route path="/my-appointments" element={<div className="p-4">My Appointments Page</div>} />
+          <Route path="/browse-doctors" element={<div className="p-4">Browse Doctors Page</div>} />
+          <Route path="/my-subscriptions" element={<div className="p-4">Subscriptions Page</div>} />
+                  <Route path="/profile-status" element={<ProfileStatus />} />
+
+        </Route>
+      </Routes>
+    </Suspense>
+  );
 }
 
-export default App
+export default App;

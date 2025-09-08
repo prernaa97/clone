@@ -4,7 +4,7 @@ const subscriptionSchema = new mongoose.Schema(
   {
     doctorId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Doctor",
+      ref: "DoctorProfile",
       required: true,
     },
     planId: {

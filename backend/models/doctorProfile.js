@@ -1,19 +1,25 @@
 import mongoose from "mongoose";
-import bcrypt from "bcryptjs";
 import validator from "validator";
 
 const profileSchema = new mongoose.Schema(
   {
+    _id: {   // use userId as the primary key
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
     userId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
       unique: true,
     },
-    doctorId: {
-      type: mongoose.Schema.Types.ObjectId,
-      required: true,
-    },
+    // doctorId: {
+    //   type: mongoose.Schema.Types.ObjectId,
+    //   required: true,
+    //   ref: "User",
+    //   unique:true
+    // },
 
     name: {
       type: String,
@@ -44,12 +50,7 @@ const profileSchema = new mongoose.Schema(
       },
     },
 
-    password: {
-      type: String,
-      required: true,
-      minlength: [8, "Password must be at least 8 characters long"],
-      select: false, // by default exclude password in queries
-    },
+    // password removed for DoctorProfile; authentication handled by User model
 
     contact_no: {
       type: String,
@@ -85,6 +86,13 @@ const profileSchema = new mongoose.Schema(
       ],
       required: true,
     },
+
+    profilePicture: {
+      type: String,
+      default: null,
+      trim: true,
+    },
+
     isProfileRequest:{
       type: Boolean,
       default: false,
@@ -99,13 +107,7 @@ const profileSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-//  Password hash before save
-profileSchema.pre("save", async function (next) {
-  if (!this.isModified("password")) return next();
-  const salt = await bcrypt.genSalt(10);
-  this.password = await bcrypt.hash(this.password, salt);
-  next();
-});
+// no password hashing needed here
 
 const DoctorProfile = mongoose.model("DoctorProfile", profileSchema);
 export default DoctorProfile;

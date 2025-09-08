@@ -9,10 +9,11 @@ export const prepareAppointment = async (req, res, next) => {
   try {
     const { slotId, confirmOverride } = req.body;
     const currentUserId = req.user?.id || req.user?._id?.toString() || req.body.userId; // fallback to body for now
+    //console.log("currentUserId: ",currentUserId);
     if (!currentUserId) return res.status(401).json({ success: false, message: "Unauthorized" });
     if (!mongoose.Types.ObjectId.isValid(slotId)) return res.status(400).json({ success: false, message: "Invalid slotId" });
 
-    const slot = await Slot.findById(slotId);
+    const slot = await Slot.findById(slotId); 
     if (!slot) return res.status(404).json({ success: false, message: "Slot not found" });
     if (slot.availability !== "available") {
       return res.status(409).json({ success: false, message: "Slot not available" });
@@ -20,7 +21,7 @@ export const prepareAppointment = async (req, res, next) => {
 
     const clinic = await Clinic.findById(slot.clinicId);
     if (!clinic) return res.status(404).json({ success: false, message: "Clinic not found for slot" });
-    const fee = clinic.consultationFee;
+    const fee = clinic.consultationFee;x``
 
     // Conflict check: does user already have appointment overlapping same time elsewhere?
     const overlapping = await Appointment.find({ userId: currentUserId })
@@ -49,7 +50,7 @@ export const prepareAppointment = async (req, res, next) => {
       });
     }
 
-    req.appointmentContext = {
+    req.appointmentContext = { 
       userId: currentUserId,
       slot,
       clinic,
@@ -70,13 +71,15 @@ export const finalizeAppointment = async (req, res) => {
   try {
     const { userId, slot, fee } = req.appointmentContext || {};
     const { razorpay_order_id, razorpay_payment_id, razorpay_signature, type = "virtual" } = req.body;
+    console.log("userId: ",req.appointmentContext.userId);
+    console.log("slotId: ",req.appointmentContext.slot);
 
     if (!userId || !slot) {
       return res.status(400).json({ success: false, message: "Preparation missing" });
     }
-    if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
-      return res.status(400).json({ success: false, message: "Missing payment verification fields" });
-    }
+    // if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
+    //   return res.status(400).json({ success: false, message: "Missing payment verification fields" });
+    // }
 
     const body = `${String(razorpay_order_id).trim()}|${String(razorpay_payment_id).trim()}`;
     const expected = crypto.createHmac("sha256", process.env.RAZORPAY_KEY_SECRET).update(body).digest("hex");

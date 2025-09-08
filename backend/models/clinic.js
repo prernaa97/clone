@@ -5,6 +5,7 @@ const clinic = new Schema({
         type: Schema.Types.ObjectId,
         ref: 'DoctorProfile',
         required: true,
+        unique:true
     },
     clinicName: {
       type: String,
@@ -30,7 +31,7 @@ const clinic = new Schema({
       minlength:[3,"Name must be at least 3 character Long"],
       maxlength:[50,"Name must be at most 50 character long"],
     },
-consultationFee: {
+   consultationFee: {
     type: Number,
     required: [true, "Consultation fee is required"],
     validate: {

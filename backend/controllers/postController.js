@@ -1,4 +1,5 @@
 import DoctorPost from "../models/doctorPost.js";
+import DoctorProfile from "../models/doctorProfile.js";
 import Subscription from "../models/Subscription.js";
 
 //  Create Post with subscription check + media upload
@@ -47,28 +48,58 @@ export const createPost = async (req, res) => {
   }
 };
 
-// Get all posts
+// Getall posts for a specific doctor
 export const getPosts = async (req, res) => {
   try {
-    const posts = await DoctorPost.find().populate("doctor", "name email");
-    res.status(200).json({ success: true, data: posts });
+    const { doctorId } = req.params; // send userId
+    if (!doctorId) {
+      return res.status(400).json({ success: false, message: "DoctorId is required in params" });
+    }
+    // 1. Check doctor exists
+    const doctor = await DoctorProfile.findOne({ _id: doctorId });
+     console.log("doctor: ", doctor);
+
+    if (!doctor) {
+      return res.status(404).json({ success: false, message: "Doctor not found" });
+    }
+   // 2. Get posts of that doctor
+    const posts = await DoctorPost.find({ doctor: doctor._id })
+      .populate("doctor", "name email specialization experience"); 
+
+    return res.status(200).json({
+      success: true,
+      doctor,   // doctor profile info
+      posts     // list of doctor posts
+    });
   } catch (err) {
+    console.error(err);
     res.status(500).json({ success: false, message: err.message });
   }
 };
 
-// ✅ Get post by ID
+//  Get a Single Post by PostId
 export const getPostById = async (req, res) => {
+  console.log("called----------------------------------------------------------------------");
   try {
-    const post = await DoctorPost.findById(req.params.id).populate("doctor", "name email");
-    if (!post) return res.status(404).json({ success: false, message: "Post not found" });
+    const { postId } = req.params;
+    console.log("getPostById called" , req.params);
+
+    const post = await DoctorPost.findById(postId)
+       .populate("doctor", "name email specialization");
+      console.log("Post is here: ", post);
+
+    if (!post) {
+      return res.status(404).json({ success: false, message: "Post not found" });
+    }
+
     res.status(200).json({ success: true, data: post });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
 };
 
-// ✅ Update post
+
+//  Update post
 export const updatePost = async (req, res) => {
   try {
     const updates = { ...req.body };

@@ -18,7 +18,7 @@ export const signUp = async (req, res) => {
       email: req.body.email,
       password: req.body.password,
       contact_no: req.body.contact_no,
-      dateOfBirth: req.body.dateOfBirth,
+      // dateOfBirth: req.body.dateOfBirth,
     });
     const result = await newUser.save();
     //  default role assignment in UserRoles
@@ -220,11 +220,20 @@ export const deleteUser = async (req, res) => {
 //  Get roles of a user
 export const getUserRoles = async (req, res) => {
   try {
-    const user = await User.findById(req.params.id).populate("roles");
+    const { id } = req.params;
+    const user = await User.findById(id);
     if (!user) return res.status(404).json({ message: "User not found" });
-    res.status(200).json(user.roles.map((r) => r.name));
+
+    // Roles are stored in UserRoles mapping collection
+    const mappings = await UserRole.find({ userId: id }).lean();
+    if (mappings.length === 0) return res.status(200).json([]);
+
+    const roleIds = mappings.map((m) => m.roleId);
+    const roleDocs = await Role.find({ _id: { $in: roleIds } }).lean();
+    const roleNames = roleDocs.map((r) => r.name);
+    return res.status(200).json(roleNames);
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    return res.status(500).json({ message: err.message });
   }
 };
 

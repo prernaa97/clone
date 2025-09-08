@@ -3,11 +3,17 @@ import Plan from "../models/plan.js";
 // Create Plan (Admin Only)
 export const createPlan = async (req, res) => {
   try {
+    const id = req.query.id;
+    if (id) {
+      const updated = await Plan.findByIdAndUpdate(id, req.body, { new: true });
+      if (!updated) return res.status(404).json({ success: false, message: "Plan not found" });
+      return res.status(200).json({ success: true, message: "Plan updated", plan: updated });
+    }
     const plan = new Plan(req.body);
     await plan.save();
-    res.status(201).json({ success: true, message: "Plan created", plan });
+    return res.status(201).json({ success: true, message: "Plan created", plan });
   } catch (error) {
-    res.status(500).json({ success: false, message: "Error creating plan", error: error.message });
+    return res.status(500).json({ success: false, message: "Error managing plan", error: error.message });
   }
 };
 
