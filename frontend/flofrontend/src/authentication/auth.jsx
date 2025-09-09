@@ -79,6 +79,8 @@ export default ()=>{
                 text: 'You have successfully signed In.',
                 icon: 'success',
                 confirmButtonText: 'OK'
+              }).then(() => {
+                window.location.href = "/";
               });
             }
         }).catch(err => {

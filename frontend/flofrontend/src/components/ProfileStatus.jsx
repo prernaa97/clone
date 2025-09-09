@@ -8,6 +8,7 @@ import { useHeader } from "../context/HeaderContext";
 export default function ProfileStatus() {
   const { updateHeader } = useHeader();
   const [profileStatus, setProfileStatus] = useState(null);
+  const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState(null);
 
@@ -18,6 +19,7 @@ export default function ProfileStatus() {
 
   useEffect(() => {
     fetchProfileStatus();
+    fetchNotifications();
   }, []);
 
   const decodeToken = (token) => {
@@ -84,6 +86,35 @@ export default function ProfileStatus() {
     }
   };
 
+  const fetchNotifications = async () => {
+    try {
+      const token = Cookies.get("token");
+      if (!token) return;
+
+      const response = await axios.get(
+        'http://localhost:5000/api/notifications',
+        {
+          headers: { Authorization: `Bearer ${token}` }
+        }
+      );
+      
+      if (response.data.success) {
+        setNotifications(response.data.notifications || []);
+        
+        // Mark notifications as read when user views them
+        if (response.data.notifications?.length > 0) {
+          await axios.put(
+            'http://localhost:5000/api/notifications/mark-all-read',
+            {},
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching notifications:', error);
+    }
+  };
+
   const getStatusInfo = (status) => {
     const statusConfig = {
       pending: {
@@ -133,7 +164,7 @@ export default function ProfileStatus() {
   return (
     <>
       <ToastContainer />
-      <div className="container-fluid p-4">
+       <div className="container-fluid p-4" style={{height: 'calc(100vh - 140px)', overflow: 'auto'}}>
         <div className="row justify-content-center">
           <div className="col-12 col-lg-8">
             <div className="card border-0 shadow-lg">
@@ -257,47 +288,95 @@ export default function ProfileStatus() {
                           )}
                         </div>
 
+                        {/* Recent Notifications */}
+                        {notifications.length > 0 && (
+                          <div className="mt-4">
+                            <h6 className="text-center text-muted mb-3">Recent Notifications</h6>
+                            <div className="list-group">
+                              {notifications.slice(0, 5).map((notification, index) => (
+                                <div key={notification._id} className="list-group-item border-0 bg-light mb-2 rounded">
+                                  <div className="d-flex justify-content-between align-items-start">
+                                    <div>
+                                      <h6 className="mb-1 fw-bold">{notification.title}</h6>
+                                      <p className="mb-1 text-muted small">{notification.message}</p>
+                                      <small className="text-muted">
+                                        {new Date(notification.createdAt).toLocaleDateString()} at {new Date(notification.createdAt).toLocaleTimeString()}
+                                      </small>
+                                    </div>
+                                    <span className={`badge ${
+                                      notification.type === 'profile_approved' ? 'bg-success' :
+                                      notification.type === 'profile_rejected' ? 'bg-danger' :
+                                      notification.type === 'subscription_expired' ? 'bg-warning' :
+                                      'bg-info'
+                                    }`}>
+                                      {notification.type.replace('_', ' ').toUpperCase()}
+                                    </span>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
                         {/* Timeline */}
-                        <div className="mt-5">
-                          <h6 className="text-muted mb-3">Application Timeline</h6>
-                          <div className="d-flex justify-content-between align-items-center">
-                            <div className="text-center">
-                              <div className="rounded-circle bg-success d-inline-flex align-items-center justify-content-center mb-2" 
-                                   style={{ width: '40px', height: '40px' }}>
-                                <i className="fas fa-check text-white"></i>
+                        <div className="mt-4">
+                          <h6 className="text-center text-muted mb-4">Application Timeline</h6>
+                          <div className="d-flex justify-content-center align-items-center position-relative" style={{ maxWidth: '600px', margin: '0 auto' }}>
+                            {/* Step 1: Submitted */}
+                            <div className="text-center position-relative">
+                              <div className="rounded-circle bg-success d-inline-flex align-items-center justify-content-center mb-2 shadow-sm" 
+                                   style={{ width: '50px', height: '50px', zIndex: 2, position: 'relative' }}>
+                                <i className="fas fa-check text-white" style={{ fontSize: '18px' }}></i>
                               </div>
-                              <div><small className="text-muted">Submitted</small></div>
+                              <div className="fw-semibold text-success" style={{ fontSize: '13px' }}>Submitted</div>
+                              <div className="text-muted" style={{ fontSize: '11px' }}>
+                                {new Date(profileStatus.createdAt).toLocaleDateString()}
+                              </div>
                             </div>
                             
-                            <div className="flex-grow-1 mx-3">
-                              <hr className={`${profileStatus.status !== 'pending' ? 'border-success' : 'border-muted'}`} />
+                            {/* Connection Line 1 */}
+                            <div className="flex-grow-1 mx-3 position-relative" style={{ height: '3px' }}>
+                              <div className={`w-100 h-100 ${profileStatus.status !== 'pending' ? 'bg-success' : 'bg-light'}`}></div>
                             </div>
                             
-                            <div className="text-center">
-                              <div className={`rounded-circle d-inline-flex align-items-center justify-content-center mb-2 ${
-                                profileStatus.status !== 'pending' ? 'bg-success' : 'bg-light border'
-                              }`} style={{ width: '40px', height: '40px' }}>
+                            {/* Step 2: Reviewed */}
+                            <div className="text-center position-relative">
+                              <div className={`rounded-circle d-inline-flex align-items-center justify-content-center mb-2 shadow-sm ${
+                                profileStatus.status === 'Approved' ? 'bg-success' :
+                                profileStatus.status === 'Rejected' ? 'bg-danger' :
+                                'bg-light border'
+                              }`} style={{ width: '50px', height: '50px', zIndex: 2, position: 'relative' }}>
                                 <i className={`fas ${
                                   profileStatus.status === 'Approved' ? 'fa-check text-white' :
-                                  profileStatus.status === 'Rejected' ? 'fa-times text-danger' :
+                                  profileStatus.status === 'Rejected' ? 'fa-times text-white' :
                                   'fa-clock text-muted'
-                                }`}></i>
+                                }`} style={{ fontSize: '18px' }}></i>
                               </div>
-                              <div><small className="text-muted">Reviewed</small></div>
+                              <div className={`fw-semibold ${
+                                profileStatus.status === 'Approved' ? 'text-success' :
+                                profileStatus.status === 'Rejected' ? 'text-danger' :
+                                'text-muted'
+                              }`} style={{ fontSize: '13px' }}>Reviewed</div>
+                              <div className="text-muted" style={{ fontSize: '11px' }}>
+                                {profileStatus.status !== 'pending' ? 'Completed' : 'In Progress'}
+                              </div>
                             </div>
                             
+                            {/* Connection Line 2 - Only show for approved */}
                             {profileStatus.status === 'Approved' && (
                               <>
-                                <div className="flex-grow-1 mx-3">
-                                  <hr className="border-muted" />
+                                <div className="flex-grow-1 mx-3 position-relative" style={{ height: '3px' }}>
+                                  <div className="w-100 h-100 bg-light"></div>
                                 </div>
                                 
-                                <div className="text-center">
-                                  <div className="rounded-circle bg-light border d-inline-flex align-items-center justify-content-center mb-2" 
-                                       style={{ width: '40px', height: '40px' }}>
-                                    <i className="fas fa-credit-card text-muted"></i>
+                                {/* Step 3: Payment */}
+                                <div className="text-center position-relative">
+                                  <div className="rounded-circle bg-light border d-inline-flex align-items-center justify-content-center mb-2 shadow-sm" 
+                                       style={{ width: '50px', height: '50px', zIndex: 2, position: 'relative' }}>
+                                    <i className="fas fa-credit-card text-muted" style={{ fontSize: '18px' }}></i>
                                   </div>
-                                  <div><small className="text-muted">Payment</small></div>
+                                  <div className="fw-semibold text-muted" style={{ fontSize: '13px' }}>Payment</div>
+                                  <div className="text-muted" style={{ fontSize: '11px' }}>Pending</div>
                                 </div>
                               </>
                             )}

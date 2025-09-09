@@ -1,56 +1,115 @@
-import DoctorProfile from "../models/doctorProfile.js";
+import Notification from "../models/Notification.js";
+import { getUserIdFromToken } from "../utils/auth.js";
 
-export const sendProfileStatusNotification = async (req, res) => {
+// Get notifications for a user
+export const getUserNotifications = async (req, res) => {
   try {
-    const { profileId, status } = req.body;
-    
-    if (!profileId || !status) {
-      return res.status(400).json({ 
-        success: false, 
-        message: "Profile ID and status are required" 
-      });
+    const userId = getUserIdFromToken(req) || req.query.userId;
+    if (!userId) {
+      return res.status(400).json({ success: false, message: "User ID is required" });
     }
 
-    // Get the profile details
-    const profile = await DoctorProfile.findById(profileId).populate('userId', 'name email');
-    
-    if (!profile) {
-      return res.status(404).json({ 
-        success: false, 
-        message: "Profile not found" 
-      });
-    }
+    const notifications = await Notification.find({ userId })
+      .sort({ createdAt: -1 })
+      .limit(50); // Limit to recent 50 notifications
 
-    // In a real application, you would send an email or push notification here
-    // For now, we'll just log the notification
-    const notificationMessage = status === 'approved' 
-      ? `Congratulations ${profile.name}! Your doctor profile has been approved. You can now proceed to payment.`
-      : `Hello ${profile.name}, unfortunately your doctor profile has been rejected. You can continue using the platform as a patient.`;
-    
-    console.log(`NOTIFICATION: ${notificationMessage}`);
-    console.log(`Email would be sent to: ${profile.userId.email}`);
-    
-    // You could integrate with email services like SendGrid, Nodemailer, etc.
-    // await sendEmail(profile.userId.email, 'Profile Status Update', notificationMessage);
-    
-    // You could also integrate with push notification services like Firebase
-    // await sendPushNotification(profile.userId._id, notificationMessage);
+    const unreadCount = await Notification.countDocuments({ userId, isRead: false });
 
     return res.json({
       success: true,
-      message: "Notification sent successfully",
-      notification: {
-        recipient: profile.userId.email,
-        message: notificationMessage,
-        status: status
-      }
+      notifications,
+      unreadCount,
+      totalCount: notifications.length
+    });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// Mark notification as read
+export const markAsRead = async (req, res) => {
+  try {
+    const { notificationId } = req.params;
+    const userId = getUserIdFromToken(req);
+
+    const notification = await Notification.findOneAndUpdate(
+      { _id: notificationId, userId },
+      { isRead: true },
+      { new: true }
+    );
+
+    if (!notification) {
+      return res.status(404).json({ success: false, message: "Notification not found" });
+    }
+
+    return res.json({ success: true, notification });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// Mark all notifications as read for a user
+export const markAllAsRead = async (req, res) => {
+  try {
+    const userId = getUserIdFromToken(req);
+    if (!userId) {
+      return res.status(400).json({ success: false, message: "User ID is required" });
+    }
+
+    await Notification.updateMany(
+      { userId, isRead: false },
+      { isRead: true }
+    );
+
+    return res.json({ success: true, message: "All notifications marked as read" });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// Create notification (internal function)
+export const createNotification = async (userId, type, title, message, data = {}) => {
+  try {
+    const notification = new Notification({
+      userId,
+      type,
+      title,
+      message,
+      data,
+      isRead: false
     });
     
-  } catch (err) {
-    console.error('Error sending notification:', err);
-    return res.status(500).json({ 
-      success: false, 
-      message: err.message 
+    await notification.save();
+    return notification;
+  } catch (error) {
+    console.error('Error creating notification:', error);
+    return null;
+  }
+};
+
+// Get notification counts for admin dashboard
+export const getAdminNotificationCounts = async (req, res) => {
+  try {
+    const userId = getUserIdFromToken(req);
+    if (!userId) {
+      return res.status(400).json({ success: false, message: "User ID is required" });
+    }
+
+    // Count admin-specific notifications
+    const pendingProfilesCount = await Notification.countDocuments({ 
+      userId, 
+      type: "admin_profile_pending", 
+      isRead: false 
     });
+
+    return res.json({
+      success: true,
+      counts: {
+        pendingProfiles: pendingProfilesCount,
+        total: pendingProfilesCount
+      }
+    });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
   }
 };

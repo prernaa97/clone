@@ -3,6 +3,7 @@ import User from "../models/user.js";
 import fs from "fs";
 import path from "path";
 import { getUserIdFromToken } from "../utils/auth.js";
+import { createNotification } from "./notificationController.js";
 
 export const submitDoctorProfile = async (req, res) => {
   try {
@@ -109,7 +110,15 @@ export const approveDoctorProfile = async (req, res) => {
     
     if (!profile) return res.status(404).json({ success: false, message: "Profile not found" });
     
-    // Here you can add notification logic to inform the user about payment
+    // Create notification for the user
+    await createNotification(
+      profile.userId._id,
+      "profile_approved",
+      "Profile Approved!",
+      "Congratulations! Your doctor profile has been approved. You can now proceed to choose a subscription plan.",
+      { profileId: profile._id }
+    );
+    
     console.log(`Profile approved for user: ${profile.userId.email} - Ready for payment`);
     
     return res.json({ 
@@ -159,7 +168,15 @@ export const rejectDoctorProfile = async (req, res) => {
     
     if (!profile) return res.status(404).json({ success: false, message: "Profile not found" });
     
-    // Here you can add notification logic to inform the user
+    // Create notification for the user
+    await createNotification(
+      profile.userId._id,
+      "profile_rejected",
+      "Profile Rejected",
+      "Unfortunately, your doctor profile application was not approved. You can continue using the platform as a patient.",
+      { profileId: profile._id }
+    );
+    
     console.log(`Profile rejected for user: ${profile.userId.email}`);
     
     return res.json({ 

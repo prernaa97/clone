@@ -105,10 +105,10 @@ function DashboardContent(){
   );
 
   return (
-    <div className="d-flex flex-column min-vh-100" style={{ margin: '0', padding: '0', width: '100vw', maxWidth: '100vw', overflow: 'hidden' }}>
+    <div className="d-flex flex-column" style={{ margin: '0', padding: '0', width: '100vw', maxWidth: '100vw', overflow: 'hidden', height: '100vh' }}>
       <Header title={headerInfo.title} subtitle={headerInfo.subtitle} />
       
-      <div className="d-flex flex-grow-1" style={{ margin: '0', padding: '0', width: '100%' }}>
+      <div className="d-flex flex-grow-1" style={{ margin: '0', padding: '0', width: '100%', minHeight: 0 }}>
         <aside 
           className={`${sidebarCollapsed ? 'collapsed' : ''}`}
           style={{
@@ -227,7 +227,8 @@ function DashboardContent(){
           padding: '0',
           margin: '0',
           width: '100%',
-          overflow: 'auto'
+          overflow: 'auto',
+          minHeight: 0
         }}>
           <div style={{ padding: '0', margin: '0', width: '100%', height: '100%' }}>
             <Outlet />

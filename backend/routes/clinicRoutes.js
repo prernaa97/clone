@@ -1,6 +1,6 @@
 import express from "express";
 import {
-  createClinic,
+  // createClinic,
   getAllClinics,
   getClinicById,
   updateClinic,
@@ -9,7 +9,7 @@ import {
 
 const router = express.Router();
 
-router.post("/createClinic", createClinic);
+// router.post("/createClinic", createClinic);
 router.get("/", getAllClinics);
 router.get("/:id", getClinicById);
 router.put("/:id", updateClinic);

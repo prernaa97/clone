@@ -16,6 +16,7 @@ import planRoutes from "./routes/planRoutes.js";
 import paymentRoutes from "./routes/paymentRoutes.js";
 import authRoutes from "./routes/userRoutes.js";
 import notificationRoutes from "./routes/notificationRoutes.js";
+import { startNotificationScheduler } from "./utils/notificationScheduler.js";
 import Role from './models/roles.js';
 import User from './models/user.js';
 import UserRole from './models/userRoles.js';
@@ -59,7 +60,11 @@ app.use("/api/clinic", clinicRoutes);
 app.use("/api/notifications", notificationRoutes);
 
 // ===== Start Server =====
-app.listen(5000, () => console.log("Server running on port 5000"));
+app.listen(5000, () => {
+  console.log("Server running on port 5000");
+  // Start notification scheduler
+  startNotificationScheduler();
+});
 
 // ===== Seed Roles =====
 async function seedRoles() {

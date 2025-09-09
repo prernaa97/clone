@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useState } from "react";
-import axios from "axios";
+import { useEffect, useState } from "react";
 import Cookies from "js-cookie";
+import axios from "axios";
 import "@fortawesome/fontawesome-free/css/all.min.css";
 
 function decode(token) {
@@ -23,8 +23,7 @@ function decode(token) {
 export default function Header({ title = "Dashboard", subtitle = "Manage your account" }) {
   const [user, setUser] = useState(null);
   const [showDropdown, setShowDropdown] = useState(false);
-  const [showNotifications, setShowNotifications] = useState(false);
-  const [notifications, setNotifications] = useState([]);
+  const [notificationCount, setNotificationCount] = useState(0);
 
   useEffect(() => {
     const token = Cookies.get("token");
@@ -36,31 +35,25 @@ export default function Header({ title = "Dashboard", subtitle = "Manage your ac
           name: payload.name || payload.email?.split('@')[0] || 'User', 
           email: payload.email 
         });
-        fetchNotifications(token, payload.sub);
+        
+        // Fetch notification count
+        fetchNotificationCount(token);
       }
     }
   }, []);
 
-  const unreadCount = useMemo(() => notifications.filter(n => !n.read).length, [notifications]);
-
-  const fetchNotifications = async (token, userId) => {
+  const fetchNotificationCount = async (token) => {
     try {
-      const res = await axios.get(`http://localhost:5000/api/notifications?userId=${userId}`, {
+      const response = await axios.get('http://localhost:5000/api/notifications', {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setNotifications(res.data?.notifications || []);
-    } catch (_) {}
-  };
-
-  const markAllAsRead = async () => {
-    try {
-      const token = Cookies.get("token");
-      if (!token || !user?.id) return;
-      await axios.post(`http://localhost:5000/api/notifications/mark-read`, { userId: user.id }, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setNotifications(prev => prev.map(n => ({ ...n, read: true })));
-    } catch (_) {}
+      
+      if (response.data?.success) {
+        setNotificationCount(response.data.unreadCount || 0);
+      }
+    } catch (error) {
+      console.log('Could not fetch notifications:', error.message);
+    }
   };
 
   const handleLogout = () => {
@@ -102,9 +95,21 @@ export default function Header({ title = "Dashboard", subtitle = "Manage your ac
               <div className="me-3 position-relative">
                 <div className="position-relative" style={{ cursor: 'pointer' }} onClick={() => { window.location.href = '/profile-status'; }}>
                   <i className="fas fa-bell text-muted" style={{ fontSize: '18px' }}></i>
-                  {unreadCount > 0 && (
-                    <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style={{ fontSize: '10px' }}>
-                      {unreadCount}
+                  {notificationCount > 0 && (
+                    <span 
+                      className="position-absolute badge rounded-pill bg-danger"
+                      style={{
+                        top: '-8px',
+                        right: '-8px',
+                        fontSize: '10px',
+                        minWidth: '18px',
+                        height: '18px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                      }}
+                    >
+                      {notificationCount > 99 ? '99+' : notificationCount}
                     </span>
                   )}
                 </div>
