@@ -264,7 +264,7 @@ export default function ProfileStatus() {
                         {/* Action Buttons */}
                         <div className="d-grid gap-2 d-md-flex justify-content-md-center">
                           {profileStatus.status === 'Approved' && (
-                            <a href="/subscription" className="btn btn-primary btn-sm">
+                            <a href="/upgrade-plan" className="btn btn-primary btn-sm">
                               <i className="fas fa-crown me-2"></i>
                               Choose Plan
                             </a>

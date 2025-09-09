@@ -124,3 +124,39 @@ export const deletePost = async (req, res) => {
     res.status(500).json({ success: false, message: err.message });
   }
 };
+
+// Get post usage for a doctor
+export const getPostUsage = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    if (!userId) {
+      return res.status(400).json({ success: false, message: "userId is required" });
+    }
+
+    // Find current active subscription
+    const now = new Date();
+    const subscription = await Subscription.findOne({
+      doctorId: userId,
+      isActive: true,
+      endDate: { $gte: now }
+    }).populate('planId', 'postLimit');
+
+    if (!subscription) {
+      return res.status(200).json({
+        success: true,
+        postsUsed: 0,
+        postLimit: 0,
+        hasActiveSubscription: false
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      postsUsed: subscription.postsUsed || 0,
+      postLimit: subscription.planId?.postLimit || 0,
+      hasActiveSubscription: true
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};

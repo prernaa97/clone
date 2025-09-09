@@ -138,3 +138,84 @@ export const deleteDoctor = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
+
+// Get all subscriptions for a doctor
+export const getSubscriptionsByDoctor = async (req, res) => {
+  try {
+    const { doctorId } = req.params;
+    if (!doctorId) {
+      return res.status(400).json({ success: false, message: "doctorId is required" });
+    }
+
+    const subscriptions = await Subscription.find({ doctorId })
+      .populate('planId', 'name price days postLimit discount')
+      .sort({ createdAt: -1 });
+
+    const formattedSubscriptions = subscriptions.map(sub => ({
+      _id: sub._id,
+      planName: sub.planId?.name || 'Unknown Plan',
+      planDays: sub.planId?.days || 0,
+      planPrice: sub.planId?.price || 0,
+      startDate: sub.startDate,
+      endDate: sub.endDate,
+      isActive: sub.isActive,
+      postsUsed: sub.postsUsed,
+      paymentId: sub.paymentId,
+      createdAt: sub.createdAt
+    }));
+
+    res.status(200).json({ 
+      success: true, 
+      subscriptions: formattedSubscriptions 
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// Get enhanced subscription status with current plan details
+export const getEnhancedSubscriptionStatus = async (req, res) => {
+  try {
+    const { doctorId } = req.query;
+    if (!doctorId) return res.status(400).json({ success: false, message: "doctorId is required" });
+
+    const now = new Date();
+    
+    // Get current active subscription
+    const activeSubscription = await Subscription.findOne({
+      doctorId,
+      isActive: true,
+      endDate: { $gte: now }
+    }).populate('planId', 'name price days postLimit discount');
+
+    if (!activeSubscription) {
+      return res.status(200).json({ 
+        success: true, 
+        hasActive: false, 
+        needsRenewal: true 
+      });
+    }
+
+    const daysLeft = Math.ceil((new Date(activeSubscription.endDate).getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+    
+    return res.status(200).json({
+      success: true,
+      hasActive: true,
+      needsRenewal: false,
+      startDate: activeSubscription.startDate,
+      endDate: activeSubscription.endDate,
+      daysLeft: Math.max(daysLeft, 0),
+      postsUsed: activeSubscription.postsUsed,
+      currentPlan: {
+        _id: activeSubscription.planId._id,
+        name: activeSubscription.planId.name,
+        price: activeSubscription.planId.price,
+        days: activeSubscription.planId.days,
+        postLimit: activeSubscription.planId.postLimit,
+        discount: activeSubscription.planId.discount
+      }
+    });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};

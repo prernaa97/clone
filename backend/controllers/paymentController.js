@@ -140,3 +140,52 @@ export const paymentVerification = async (req, res) => {
     session.endSession();
   }
 };
+
+// Get payment history for a user/doctor
+export const getPaymentHistory = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    if (!userId) {
+      return res.status(400).json({ success: false, message: "userId is required" });
+    }
+
+    // Get payments linked to subscriptions of this doctor
+    const subscriptions = await Subscription.find({ doctorId: userId }).select('_id planId');
+    const subIds = subscriptions.map(sub => sub._id);
+
+    if (subIds.length === 0) {
+      return res.status(200).json({ 
+        success: true, 
+        payments: [] 
+      });
+    }
+
+    const payments = await Payment.find({ sub_id: { $in: subIds } })
+      .populate({
+        path: 'sub_id',
+        populate: {
+          path: 'planId',
+          select: 'name price'
+        }
+      })
+      .sort({ createdAt: -1 });
+
+    const formattedPayments = payments.map(payment => ({
+      _id: payment._id,
+      amount: payment.amount,
+      status: payment.status,
+      currency: payment.currency,
+      planName: payment.sub_id?.planId?.name || 'Unknown Plan',
+      razorpay_payment_id: payment.razorpay_payment_id,
+      razorpay_order_id: payment.razorpay_order_id,
+      createdAt: payment.createdAt
+    }));
+
+    res.status(200).json({ 
+      success: true, 
+      payments: formattedPayments 
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};

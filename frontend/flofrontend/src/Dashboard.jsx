@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Outlet, NavLink } from "react-router-dom";
+import { Outlet, NavLink, useLocation } from "react-router-dom";
 import Cookies from "js-cookie";
 import axios from "axios";
 import "./css/style.css";
@@ -21,7 +21,8 @@ function DashboardContent(){
   const [user, setUser] = useState(null);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const { pendingCount, refreshStats } = useStats();
-  const { headerInfo } = useHeader();
+  const { headerInfo, updateHeader } = useHeader();
+  const location = useLocation();
 
   useEffect(() => {
     const token = Cookies.get("token");
@@ -52,6 +53,29 @@ function DashboardContent(){
       }).catch(()=>{});
     });
   }, []);
+
+  // Update header title based on current route
+  useEffect(() => {
+    const path = location.pathname || "/";
+    const titleMap = {
+      "/": "Profile Status",
+      "/doctor-profile": "Profile",
+      "/profile-status": "Profile Status",
+      "/admin/profile-requests": "Profile Requests",
+      "/subscription": "Subscription",
+      "/upgrade-plan": "Renew Subscription",
+      "/browse-doctors": "Book Appointment",
+      "/slots": "Slot Management",
+      "/clinic": "Clinic Information",
+      "/admin/patients": "Patient Management",
+      "/admin/plans": "Plan Creation",
+      "/admin/doctors": "Doctors & Subscriptions",
+      "/my-appointments": "My Appointments",
+      "/my-subscriptions": "Subscriptions"
+    };
+    const title = titleMap[path] || "Healthcare Dashboard";
+    updateHeader(title, "Manage your account");
+  }, [location.pathname, updateHeader]);
 
 
   const isDoctor = useMemo(()=>roles.includes('Doctor'),[roles]);
@@ -177,8 +201,8 @@ function DashboardContent(){
                 )}
                  {renderItem('/doctor-profile', sidebarCollapsed ? '' : 'Profile','fa-user-md')}
                  {renderItem('/profile-status', sidebarCollapsed ? '' : 'Profile Status','fa-clipboard-check')}
-                 {renderItem('/subscription', sidebarCollapsed ? '' : 'My Subscription','fa-crown')}
-                 {renderItem('/upgrade-plan', sidebarCollapsed ? '' : 'Upgrade Plan','fa-rocket')}
+                 {renderItem('/subscription', sidebarCollapsed ? '' : 'Subscription','fa-crown')}
+                 {renderItem('/upgrade-plan', sidebarCollapsed ? '' : 'Renew Subscription','fa-rocket')}
                  {renderItem('/appointments', sidebarCollapsed ? '' : 'Appointments','fa-calendar-check', '3')}
                  {renderItem('/slots', sidebarCollapsed ? '' : 'Slot Management','fa-clock')}
                  {renderItem('/clinic', sidebarCollapsed ? '' : 'Clinic Information','fa-hospital-alt')}
@@ -215,7 +239,7 @@ function DashboardContent(){
                   </div>
                 )}
                  {renderItem('/my-appointments', sidebarCollapsed ? '' : 'My Appointments','fa-calendar-alt')}
-                 {renderItem('/browse-doctors', sidebarCollapsed ? '' : 'Browse Doctors','fa-stethoscope')}
+                 {renderItem('/browse-doctors', sidebarCollapsed ? '' : 'Book Appointment','fa-stethoscope')}
                  {renderItem('/profile-status', sidebarCollapsed ? '' : 'Profile Status','fa-clipboard-check')}
                  {renderItem('/my-subscriptions', sidebarCollapsed ? '' : 'Subscriptions','fa-credit-card')}
               </>
@@ -223,7 +247,7 @@ function DashboardContent(){
           </nav>
         </aside>
         <main className="flex-grow-1" style={{
-          background:'linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%)',
+          background: 'linear-gradient(135deg, rgb(241, 245, 249) 0%, rgb(226, 232, 240) 100%)',
           padding: '0',
           margin: '0',
           width: '100%',

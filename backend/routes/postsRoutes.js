@@ -8,6 +8,7 @@ import {
   getPostById,
   updatePost,
   deletePost,
+  getPostUsage,
 } from "../controllers/postController.js";
 import { ensureDoctorWithActiveSubscription, validatePostPayload , requireAuth } from "../middlewares/postGuards.js";
 
@@ -32,6 +33,7 @@ router.use(requireAuth);
 router.post("/", ensureDoctorWithActiveSubscription, upload.array("media", 5), validatePostPayload, createPost); // multiple media files
 router.get("/doctor/:doctorId", getPosts);
 router.get("/post/:postId", getPostById);
+router.get("/usage/:userId", getPostUsage);
 router.put("/:id", ensureDoctorWithActiveSubscription, upload.array("media", 5), validatePostPayload, updatePost);
 router.delete("/:id", deletePost);
 

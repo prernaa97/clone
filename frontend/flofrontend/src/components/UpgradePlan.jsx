@@ -24,7 +24,7 @@ export default function UpgradePlan() {
     const css = `
     /* Main container styles */
     .upgrade-plan-container { 
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+      background: linear-gradient(135deg, rgb(241, 245, 249) 0%, rgb(226, 232, 240) 100%);
       min-height: 100vh; 
       padding: 20px 0;
       overflow-x: hidden;

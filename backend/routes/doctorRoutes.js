@@ -6,6 +6,8 @@ import {
   updateDoctor,
   deleteDoctor,
   getSubscriptionStatus,
+  getSubscriptionsByDoctor,
+  getEnhancedSubscriptionStatus,
 } from "../controllers/doctorController.js";
 
 const router = express.Router();
@@ -15,6 +17,7 @@ router.get("/", getAllDoctors);       // Read all
 router.get("/:id", getDoctorById);    // Read one
 router.put("/:id", updateDoctor);     // Update
 router.delete("/:id", deleteDoctor);  // Delete
-router.get("/subscription/status", getSubscriptionStatus);
+router.get("/subscription/status", getEnhancedSubscriptionStatus);
+router.get("/subscription/history/:doctorId", getSubscriptionsByDoctor);
 
 export default router;
