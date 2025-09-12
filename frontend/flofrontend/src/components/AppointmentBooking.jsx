@@ -173,7 +173,15 @@ export default function AppointmentBooking() {
         
         // Create Razorpay order
         const orderResponse = await axios.post('http://localhost:5000/api/payment/checkout', {
-          amount: fee
+          amount: fee,
+          currency: 'INR'
+        },
+        {
+          headers: { 
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          timeout: 10000 // Add 10 second timeout
         });
 
         if (orderResponse.data?.success) {
@@ -313,9 +321,9 @@ export default function AppointmentBooking() {
                 <i className="fas fa-user-md"></i>
               </div>
               <div className="doctor-info">
-                <h4>{doctor.name || 'Dr. Name'}</h4>
-                <p className="doctor-specialty">{doctor.speciality || 'General Practice'}</p>
-                <p className="doctor-fee">₹{doctor.consultationFee || 500}</p>
+                <h4>{doctor?.name || 'Dr. Name'}</h4>
+        <p className="doctor-specialty">{doctor?.specialization|| 'General Practice'}</p>
+                <p className="doctor-fee"> ₹{doctor.clinics?.[0]?.consultationFee || 500}</p>
               </div>
               {selectedDoctor?._id === doctor._id && (
                 <div className="selected-indicator">

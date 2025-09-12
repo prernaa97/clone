@@ -196,6 +196,22 @@
   min-height: 80px;
 }
 
+/* Auto-calculated field styling */
+.auto-calculated-field {
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%) !important;
+  border: 2px solid #667eea !important;
+  color: #1e293b !important;
+  font-weight: 600 !important;
+  text-align: center !important;
+  cursor: default !important;
+}
+
+.auto-calculated-field:focus {
+  outline: none !important;
+  border-color: #667eea !important;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1) !important;
+}
+
 .days-selection {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
@@ -431,6 +447,7 @@
   color: #991b1b;
 }
 
+
 /* Responsive Design */
 @media (max-width: 768px) {
   .clinic-info-container {
@@ -472,5 +489,35 @@
   
   .slots-grid {
     grid-template-columns: 1fr;
+  }
+  
+  .slot-preview-card {
+    padding: 16px;
+    margin-top: 16px;
+  }
+  
+  .slot-preview-card h4 {
+    font-size: 1.1rem;
+  }
+  
+  .preview-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+  
+  .preview-item {
+    padding: 12px;
+  }
+  
+  .preview-value {
+    font-size: 1.5rem;
+  }
+  
+  .preview-summary {
+    padding: 10px 12px;
+    font-size: 13px;
+    flex-direction: column;
+    text-align: center;
+    gap: 4px;
   }
 }

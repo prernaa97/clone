@@ -24,7 +24,7 @@ export default function UpgradePlan() {
     const css = `
     /* Main container styles */
     .upgrade-plan-container { 
-      background: linear-gradient(135deg, rgb(241, 245, 249) 0%, rgb(226, 232, 240) 100%);
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
       min-height: 100vh; 
       padding: 20px 0;
       overflow-x: hidden;
@@ -237,7 +237,7 @@ export default function UpgradePlan() {
         setPlans(filteredPlans || []);
       }
 
-      // Load current subscription status - using correct endpoint
+      // Load current subscription status with plan details
       try {
         const subRes = await axios.get(`http://localhost:5000/api/doctors/subscription/status?doctorId=${userId}`, {
           headers: { Authorization: `Bearer ${token}` }
@@ -246,27 +246,17 @@ export default function UpgradePlan() {
         if (subRes.data?.success) {
           setCurrentSubscription(subRes.data);
           
-          // Get current plan details from active subscription
-          if (subRes.data.hasActive) {
-            try {
-              // Get all plans to find current plan details
-              const allPlansRes = await axios.get('http://localhost:5000/api/plan');
-              if (allPlansRes.data?.success) {
-                // Find current plan - this would need subscription to have planId
-                // For now, we'll simulate current plan logic
-                const activePlans = allPlansRes.data.plans.filter(p => p.price > 0);
-                if (activePlans.length > 0) {
-                  setCurrentPlan(activePlans[0]); // Set first paid plan as current for demo
-                }
-              }
-            } catch (planErr) {
-              console.log('Could not fetch current plan details:', planErr.message);
-            }
+          // If has active subscription, set the current plan from the response
+          if (subRes.data.hasActive && subRes.data.currentPlan) {
+            setCurrentPlan(subRes.data.currentPlan);
+            console.log('Current subscription loaded:', subRes.data);
           }
         }
       } catch (err) {
         // If subscription status API fails, continue without current subscription info
         console.log('No subscription status available:', err.message);
+        setCurrentSubscription(null);
+        setCurrentPlan(null);
       }
     } catch (e) {
       console.error('Error loading data:', e);
@@ -454,15 +444,29 @@ export default function UpgradePlan() {
               </div>
               <div className="current-plan-stat">
                 <div className="current-plan-stat-value text-info">{currentPlan.days}</div>
-                <div className="current-plan-stat-label">Days</div>
+                <div className="current-plan-stat-label">Total Days</div>
               </div>
               <div className="current-plan-stat">
-                <div className="current-plan-stat-value text-warning">{currentPlan.postLimit}</div>
-                <div className="current-plan-stat-label">Posts</div>
+                <div className="current-plan-stat-value text-warning">{currentSubscription.postsUsed || 0}/{currentPlan.postLimit}</div>
+                <div className="current-plan-stat-label">Posts Used</div>
               </div>
               <div className="current-plan-stat">
                 <div className="current-plan-stat-value text-primary">{currentSubscription.daysLeft || 0}</div>
                 <div className="current-plan-stat-label">Days Left</div>
+              </div>
+            </div>
+            
+            {/* Subscription Period */}
+            <div className="mb-3">
+              <div className="row">
+                <div className="col-6">
+                  <small className="text-muted">Start Date</small>
+                  <div className="fw-semibold">{new Date(currentSubscription.startDate).toLocaleDateString()}</div>
+                </div>
+                <div className="col-6">
+                  <small className="text-muted">End Date</small>
+                  <div className="fw-semibold">{new Date(currentSubscription.endDate).toLocaleDateString()}</div>
+                </div>
               </div>
             </div>
             
@@ -473,7 +477,12 @@ export default function UpgradePlan() {
                   style={{width: `${Math.max(0, Math.min(100, ((currentSubscription.daysLeft || 0) / currentPlan.days) * 100))}%`}}
                 ></div>
               </div>
-              <small className="text-muted d-block text-center mt-2">Time remaining</small>
+              <small className="text-muted d-block text-center mt-2">
+                {currentSubscription.daysLeft > 0 ? 
+                  `${currentSubscription.daysLeft} days remaining` : 
+                  'Subscription expired'
+                }
+              </small>
             </div>
             
             <div className="text-center">

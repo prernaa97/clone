@@ -64,6 +64,7 @@ function DashboardContent(){
       "/admin/profile-requests": "Profile Requests",
       "/subscription": "Subscription",
       "/upgrade-plan": "Renew Subscription",
+      "/choose-plan": "Choose Your Plan",
       "/browse-doctors": "Book Appointment",
       "/slots": "Slot Management",
       "/clinic": "Clinic Information",
@@ -74,7 +75,7 @@ function DashboardContent(){
       "/my-subscriptions": "Subscriptions"
     };
     const title = titleMap[path] || "Healthcare Dashboard";
-    updateHeader(title, "Manage your account");
+    updateHeader(title, "Upgrade or renew your doctor account");
   }, [location.pathname, updateHeader]);
 
 
@@ -157,37 +158,20 @@ function DashboardContent(){
             </button>
           </div>
 
-          {/* User Info */}
-          {!sidebarCollapsed && (
-            <div className="p-4" style={{borderBottom:'1px solid #e2e8f0'}}>
-              <div className="text-center mb-3">
-                <div className="d-inline-flex align-items-center justify-content-center rounded-circle" style={{
-                  width:50, height:50, 
-                  background:'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', 
-                  color:'#fff', fontWeight:700, fontSize:18,
-                  boxShadow: '0 4px 15px rgba(102, 126, 234, 0.3)'
-                }}>
-                  {(user?.name||'U').charAt(0).toUpperCase()}
-                </div>
-              </div>
-              <div className="d-flex align-items-center">
-                <div className="flex-grow-1 text-center">
-                  <div style={{fontSize:15, color:'#1e293b', fontWeight:600, lineHeight:1.2}}>
-                    {user?.name||'User'}
-                  </div>
-                  <div style={{
-                    fontSize:11, color:'#64748b', marginTop:2,
-                    background:'rgba(102, 126, 234, 0.1)', 
-                    padding:'2px 8px', borderRadius:12, display:'inline-block'
-                  }}>
-                    {roles.join(' • ')||'Guest'}
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
 
           <nav className={`${sidebarCollapsed ? 'px-2' : 'p-4'}`} style={{display:'flex', flexDirection:'column', gap:4}}>
+            {/* Common Navigation - Available to All */}
+            {!sidebarCollapsed && (
+              <div style={{
+                fontSize:11, letterSpacing:1, color:'#94a3b8', 
+                textTransform:'uppercase', marginBottom:8, marginTop:8,
+                fontWeight:600
+              }}>
+                🏥 Healthcare Portal
+              </div>
+            )}
+            {renderItem('/doctors', sidebarCollapsed ? '' : 'Doctor Portfolio','fa-user-md')}
+
             {isDoctor && (
               <>
                 {!sidebarCollapsed && (
@@ -199,8 +183,6 @@ function DashboardContent(){
                     🩺 Doctor Panel
                   </div>
                 )}
-                 {renderItem('/doctor-profile', sidebarCollapsed ? '' : 'Profile','fa-user-md')}
-                 {renderItem('/profile-status', sidebarCollapsed ? '' : 'Profile Status','fa-clipboard-check')}
                  {renderItem('/subscription', sidebarCollapsed ? '' : 'Subscription','fa-crown')}
                  {renderItem('/upgrade-plan', sidebarCollapsed ? '' : 'Renew Subscription','fa-rocket')}
                  {renderItem('/appointments', sidebarCollapsed ? '' : 'Appointments','fa-calendar-check', '3')}
@@ -209,7 +191,7 @@ function DashboardContent(){
               </>
             )}
 
-            {isAdmin && (
+            {isAdmin && !isDoctor && (
               <>
                 {!sidebarCollapsed && (
                   <div style={{
@@ -238,9 +220,9 @@ function DashboardContent(){
                     💊 Patient Portal
                   </div>
                 )}
+                 {renderItem('/doctor-profile', sidebarCollapsed ? '' : 'Doctor Registration','fa-user-md')}
                  {renderItem('/my-appointments', sidebarCollapsed ? '' : 'My Appointments','fa-calendar-alt')}
                  {renderItem('/browse-doctors', sidebarCollapsed ? '' : 'Book Appointment','fa-stethoscope')}
-                 {renderItem('/profile-status', sidebarCollapsed ? '' : 'Profile Status','fa-clipboard-check')}
                  {renderItem('/my-subscriptions', sidebarCollapsed ? '' : 'Subscriptions','fa-credit-card')}
               </>
             )}

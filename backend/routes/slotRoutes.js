@@ -7,12 +7,13 @@ import {
   updateSlot,
   deleteSlot
 } from "../controllers/slotController.js";
+import { requireAuth, ensureDoctorWithActiveSubscription } from "../middlewares/postGuards.js";
 
 const router = express.Router();
 
 // create single slot
 // router.post("/", createSlot);
-router.post("/createClinicWithSlots", createClinicWithSlots);
+router.post("/createClinicWithSlots", requireAuth, ensureDoctorWithActiveSubscription, createClinicWithSlots);
 
 
 // optional: bulk create

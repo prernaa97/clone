@@ -9,6 +9,8 @@ import Subscription from './components/Subscription';
 import UpgradePlan from './components/UpgradePlan';
 import PlanSelection from './components/PlanSelection';
 import ClinicInformation from './components/ClinicInformation';
+import SlotManagement from './components/SlotManagement';
+import DoctorPortfolio from './components/DoctorPortfolio';
 import AppointmentBooking from './components/AppointmentBooking';
 import ProtectedRoute from './components/ProtectedRoute';
 const Dashboard = lazy(() => import('./Dashboard'));
@@ -27,9 +29,11 @@ function App() {
           <Route path="profile-status" element={<ProfileStatus />} />
           <Route path="admin/profile-requests" element={<AdminProfileRequests />} />
           <Route path="subscription" element={<Subscription />} />
-          <Route path="upgrade-plan" element={<PlanSelection />} />
+          <Route path="upgrade-plan" element={<UpgradePlan />} />
+          <Route path="choose-plan" element={<PlanSelection />} />
           <Route path="appointments" element={<div className="p-4">Appointments Page</div>} />
-          <Route path="slots" element={<div className="p-4">Slot Management Page</div>} />
+          <Route path="slots" element={<SlotManagement />} />
+          <Route path="doctors" element={<DoctorPortfolio />} />
           <Route path="clinic" element={<ClinicInformation />} />
           <Route path="admin/patients" element={<div className="p-4">Patient Management Page</div>} />
           <Route path="admin/plans" element={<AdminPlans />} />

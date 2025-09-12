@@ -20,8 +20,9 @@ function decode(token) {
   }
 }
 
-export default function Header({ title = "Dashboard", subtitle = "Manage your account" }) {
+export default function Header({ title = "Dashboard", subtitle = "Upgrade or renew your doctor account" }) {
   const [user, setUser] = useState(null);
+  const [roles, setRoles] = useState([]);
   const [showDropdown, setShowDropdown] = useState(false);
   const [notificationCount, setNotificationCount] = useState(0);
 
@@ -36,11 +37,34 @@ export default function Header({ title = "Dashboard", subtitle = "Manage your ac
           email: payload.email 
         });
         
+        // Fetch user roles
+        fetchUserRoles(token, payload.sub);
+        
         // Fetch notification count
         fetchNotificationCount(token);
       }
     }
   }, []);
+
+  const fetchUserRoles = async (token, userId) => {
+    try {
+      const response = await axios.get(`http://localhost:5000/users/${userId}/roles`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setRoles(response.data || []);
+    } catch (error) {
+      // Fallback to alternate endpoint
+      try {
+        const response = await axios.get(`http://localhost:5000/users/roles/${userId}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setRoles(response.data || []);
+      } catch (err) {
+        console.log('Could not fetch user roles:', err.message);
+        setRoles([]);
+      }
+    }
+  };
 
   const fetchNotificationCount = async (token) => {
     try {
@@ -75,12 +99,36 @@ export default function Header({ title = "Dashboard", subtitle = "Manage your ac
           <div className="col-md-6">
             <div className="d-flex align-items-center">
               <div className="me-3">
-                <i className="fas fa-stethoscope text-primary" style={{ fontSize: '18px' }}></i>
+                <div className="d-inline-flex align-items-center justify-content-center rounded-circle" style={{
+                  width: '40px',
+                  height: '40px', 
+                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', 
+                  color: '#fff',
+                  fontSize: '16px',
+                  boxShadow: '0 4px 15px rgba(102, 126, 234, 0.3)'
+                }}>
+                  <i className="fas fa-stethoscope"></i>
+                </div>
               </div>
               <div>
+                <div className="d-flex align-items-center">
+                  <span style={{
+                    fontSize: '12px',
+                    color: '#667eea',
+                    background: 'rgba(102, 126, 234, 0.1)',
+                    padding: '2px 8px',
+                    borderRadius: '12px',
+                    marginRight: '8px',
+                    fontWeight: '600',
+                    border: '1px solid rgba(102, 126, 234, 0.2)'
+                  }}>
+                    Healthcare Portal
+                  </span>
+                  <i className="fas fa-chevron-right" style={{ fontSize: '10px', color: '#94a3b8', margin: '0 4px' }}></i>
                 <h4 className="mb-0 fw-bold" style={{ color: '#1e293b', fontSize: '20px' }}>
                   {title}
                 </h4>
+                </div>
                 <p className="mb-0 text-muted" style={{ fontSize: '14px' }}>
                   {subtitle}
                 </p>
@@ -93,7 +141,12 @@ export default function Header({ title = "Dashboard", subtitle = "Manage your ac
             <div className="d-flex align-items-center justify-content-end">
               {/* Notifications */}
               <div className="me-3 position-relative">
-                <div className="position-relative" style={{ cursor: 'pointer' }} onClick={() => { window.location.href = '/profile-status'; }}>
+                <div 
+                  className="position-relative" 
+                  style={{ cursor: 'pointer' }} 
+                  onClick={() => { window.location.href = '/profile-status'; }}
+                  title="View Profile Status"
+                >
                   <i className="fas fa-bell text-muted" style={{ fontSize: '18px' }}></i>
                   {notificationCount > 0 && (
                     <span 
@@ -126,9 +179,23 @@ export default function Header({ title = "Dashboard", subtitle = "Manage your ac
                     <div className="fw-semibold" style={{ fontSize: '14px', color: '#1e293b' }}>
                       {user?.name || 'User'}
                     </div>
-                    <div className="text-muted" style={{ fontSize: '12px' }}>
+                    <div style={{ fontSize: '12px', color: '#64748b' }}>
                       {user?.email || 'user@example.com'}
                     </div>
+                    {roles.length > 0 && (
+                      <span style={{
+                        fontSize: '10px',
+                        color: '#667eea',
+                        background: 'rgba(102, 126, 234, 0.1)',
+                        padding: '1px 4px',
+                        borderRadius: '4px',
+                        display: 'inline-block',
+                        marginTop: '2px',
+                        border: '1px solid rgba(102, 126, 234, 0.2)'
+                      }}>
+                        {roles[0]}
+                      </span>
+                    )}
                   </div>
                   
                   <div className="rounded-circle d-flex align-items-center justify-content-center" style={{
@@ -159,6 +226,20 @@ export default function Header({ title = "Dashboard", subtitle = "Manage your ac
                       <div className="text-muted" style={{ fontSize: '12px' }}>
                         {user?.email || 'user@example.com'}
                       </div>
+                      {roles.length > 0 && (
+                        <span style={{
+                          fontSize: '10px',
+                          color: '#667eea',
+                          background: 'rgba(102, 126, 234, 0.1)',
+                          padding: '2px 6px',
+                          borderRadius: '4px',
+                          display: 'inline-block',
+                          marginTop: '4px',
+                          border: '1px solid rgba(102, 126, 234, 0.2)'
+                        }}>
+                          {roles[0]}
+                        </span>
+                      )}
                     </div>
                     
                     <a href="/profile" className="d-block px-3 py-2 text-decoration-none text-dark" style={{ fontSize: '14px' }}>

@@ -21,7 +21,7 @@ export const prepareAppointment = async (req, res, next) => {
 
     const clinic = await Clinic.findById(slot.clinicId);
     if (!clinic) return res.status(404).json({ success: false, message: "Clinic not found for slot" });
-    const fee = clinic.consultationFee;x``
+    const fee = clinic.consultationFee;
 
     // Conflict check: does user already have appointment overlapping same time elsewhere?
     const overlapping = await Appointment.find({ userId: currentUserId })

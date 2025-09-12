@@ -61,6 +61,23 @@ export default function ClinicInformation() {
     checkExistingClinic();
   }, []);
 
+  // Auto-calculate generateDays whenever timing configuration changes
+  useEffect(() => {
+    if (!existingClinic) {
+      const newGenerateDays = autoCalculateGenerateDaysForTiming(
+        formData.clinicTiming, 
+        formData.clinicTiming.days
+      );
+      
+      if (newGenerateDays !== formData.generateDays) {
+        setFormData(prev => ({
+          ...prev,
+          generateDays: newGenerateDays
+        }));
+      }
+    }
+  }, [formData.clinicTiming.startTime, formData.clinicTiming.endTime, formData.clinicTiming.slotDuration, formData.clinicTiming.days.length, existingClinic]);
+
   const checkExistingClinic = async () => {
     try {
       const token = Cookies.get('token');
@@ -104,12 +121,18 @@ export default function ClinicInformation() {
     
     if (name.startsWith('clinicTiming.')) {
       const timingField = name.split('.')[1];
+      const newTiming = {
+        ...formData.clinicTiming,
+        [timingField]: timingField === 'slotDuration' ? parseInt(value) : value
+      };
+      
+      // Auto-calculate generateDays when timing changes
+      const newGenerateDays = autoCalculateGenerateDaysForTiming(newTiming, newTiming.days);
+      
       setFormData(prev => ({
         ...prev,
-        clinicTiming: {
-          ...prev.clinicTiming,
-          [timingField]: timingField === 'slotDuration' ? parseInt(value) : value
-        }
+        clinicTiming: newTiming,
+        generateDays: newGenerateDays
       }));
     } else {
       setFormData(prev => ({
@@ -119,15 +142,107 @@ export default function ClinicInformation() {
     }
   };
 
+  // Helper function to parse time to minutes
+  const parseTimeToMinutes = (timeStr) => {
+    const match = timeStr.match(/^([0-1]?\d|2[0-3]):([0-5]\d)\s*(AM|PM)$/i);
+    if (!match) return null;
+    
+    let hours = parseInt(match[1], 10);
+    const minutes = parseInt(match[2], 10);
+    const meridiem = match[3].toUpperCase();
+    
+    if (meridiem === 'PM' && hours !== 12) hours += 12;
+    if (meridiem === 'AM' && hours === 12) hours = 0;
+    
+    return hours * 60 + minutes;
+  };
+
+  // Helper function to calculate how many slots will be generated
+  const calculateSlotPreview = () => {
+    const { startTime, endTime, slotDuration, days } = formData.clinicTiming;
+    const { generateDays } = formData;
+    
+    if (!startTime || !endTime || !slotDuration || !generateDays) {
+      return null;
+    }
+
+    const startMinutes = parseTimeToMinutes(startTime);
+    const endMinutes = parseTimeToMinutes(endTime);
+    
+    if (startMinutes === null || endMinutes === null || endMinutes <= startMinutes) {
+      return null;
+    }
+
+    // Calculate total working minutes per day
+    const workingMinutesPerDay = endMinutes - startMinutes;
+    
+    // Calculate slots per day
+    const slotsPerDay = Math.floor(workingMinutesPerDay / slotDuration);
+    
+    // Calculate total days that will have slots generated
+    const totalSlotsGenerated = slotsPerDay * days.length * generateDays;
+    
+    return {
+      slotsPerDay,
+      workingDays: days.length,
+      generateDays,
+      totalSlots: totalSlotsGenerated,
+      workingMinutesPerDay,
+      workingHours: Math.floor(workingMinutesPerDay / 60),
+      workingMinutesRemainder: workingMinutesPerDay % 60,
+      hasWorkingDays: days.length > 0
+    };
+  };
+
+  // Helper function to calculate generateDays for specific timing config
+  const autoCalculateGenerateDaysForTiming = (timing, workingDays) => {
+    const { startTime, endTime, slotDuration } = timing;
+    
+    if (!startTime || !endTime || !slotDuration) {
+      return 7; // Default fallback
+    }
+
+    // Even if no working days selected yet, calculate based on timing for preview
+    const startMinutes = parseTimeToMinutes(startTime);
+    const endMinutes = parseTimeToMinutes(endTime);
+    
+    if (startMinutes === null || endMinutes === null || endMinutes <= startMinutes) {
+      return 7; // Default fallback
+    }
+
+    // Calculate working minutes and slots per day
+    const workingMinutesPerDay = endMinutes - startMinutes;
+    const slotsPerDay = Math.floor(workingMinutesPerDay / slotDuration);
+    
+    // Calculate optimal days based on slots per day
+    // For better user experience, suggest days based on slot density
+    if (slotsPerDay >= 16) return 7;  // High slot density - generate for a week
+    if (slotsPerDay >= 8) return 10;  // Medium slot density - generate for 10 days
+    if (slotsPerDay >= 4) return 14;  // Low slot density - generate for 2 weeks
+    return 21; // Very low slot density - generate for 3 weeks
+  };
+
+  // Auto-calculate and update generateDays based on slot configuration
+  const autoCalculateGenerateDays = () => {
+    const { startTime, endTime, slotDuration, days } = formData.clinicTiming;
+    return autoCalculateGenerateDaysForTiming({ startTime, endTime, slotDuration }, days);
+  };
+
   const handleDayChange = (day) => {
+    const newDays = formData.clinicTiming.days.includes(day)
+      ? formData.clinicTiming.days.filter(d => d !== day)
+      : [...formData.clinicTiming.days, day];
+    
+    // Auto-calculate generateDays when working days change
+    const newGenerateDays = autoCalculateGenerateDaysForTiming(formData.clinicTiming, newDays);
+    
     setFormData(prev => ({
       ...prev,
       clinicTiming: {
         ...prev.clinicTiming,
-        days: prev.clinicTiming.days.includes(day)
-          ? prev.clinicTiming.days.filter(d => d !== day)
-          : [...prev.clinicTiming.days, day]
-      }
+        days: newDays
+      },
+      generateDays: newGenerateDays
     }));
   };
 
@@ -214,7 +329,6 @@ export default function ClinicInformation() {
       } else {
         // Create new clinic
         const requestData = {
-          doctorId,
           clinicName: formData.clinicName.trim(),
           clinicAddress: formData.clinicAddress.trim(),
           city: formData.city.trim(),
@@ -573,6 +687,27 @@ export default function ClinicInformation() {
                 </select>
               </div>
               <div className="form-group">
+                <label htmlFor="slotsPerDay">
+                  <i className="fas fa-calendar-check me-2"></i>
+                  Slots Per Day (Auto-calculated)
+                </label>
+                <input
+                  type="number"
+                  id="slotsPerDay"
+                  name="slotsPerDay"
+                  value={(() => {
+                    const preview = calculateSlotPreview();
+                    return preview ? preview.slotsPerDay : 0;
+                  })()}
+                  readOnly
+                  className="auto-calculated-field"
+                  placeholder="Select timing to see slots per day"
+                />
+              </div>
+            </div>
+
+            <div className="form-row">
+              <div className="form-group">
                 <label htmlFor="generateDays">
                   <i className="fas fa-calendar-plus me-2"></i>
                   Generate Slots For (days)
@@ -586,9 +721,29 @@ export default function ClinicInformation() {
                   min="1"
                   max="30"
                   disabled={existingClinic && !isEditing}
+                  required
+                />
+              </div>
+              <div className="form-group">
+                <label htmlFor="totalSlots">
+                  <i className="fas fa-calculator me-2"></i>
+                  Total Slots (Preview)
+                </label>
+                <input
+                  type="number"
+                  id="totalSlots"
+                  name="totalSlots"
+                  value={(() => {
+                    const preview = calculateSlotPreview();
+                    return preview ? preview.totalSlots : 0;
+                  })()}
+                  readOnly
+                  className="auto-calculated-field"
+                  placeholder="Total slots to be generated"
                 />
               </div>
             </div>
+
           </div>
 
           {(!existingClinic || isEditing) && (

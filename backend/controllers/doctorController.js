@@ -62,12 +62,71 @@ export const createSubscription = async (req, res) => {
 };
 
 //  Get All Doctors
+// export const getAllDoctors = async (req, res) => {
+//   try {
+//     const doctors = await DoctorProfile.find();
+//     res.status(200).json({ success: true, count: doctors.length, data: doctors });
+//   } catch (error) {
+//     res.status(500).json({ success: false, message: error.message });
+//   }
+// };
+
 export const getAllDoctors = async (req, res) => {
   try {
-    const doctors = await DoctorProfile.find();
-    res.status(200).json({ success: true, count: doctors.length, data: doctors });
+    const doctors = await DoctorProfile.aggregate([
+      {
+        $lookup: {
+          from: "clinics",            // Clinic collection ka naam
+          localField: "_id",          // DoctorProfile._id
+          foreignField: "doctorId",   // Clinic.doctorId
+          as: "clinics"               // response me "clinics" naam se array add hoga
+        }
+      }
+    ]);
+
+    res.status(200).json({
+      success: true,
+      count: doctors.length,
+      data: doctors,
+    });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// ✅ Get Approved Doctors with Pagination
+export const getApprovedDoctors = async (req, res) => {
+  try {
+    const { page = 1, limit = 20 } = req.query;
+    
+    // Convert page and limit to numbers
+    const pageNum = parseInt(page, 10);
+    const limitNum = parseInt(limit, 10);
+    const skip = (pageNum - 1) * limitNum;
+
+    // Get approved doctors with active subscriptions
+    const approvedDoctors = await DoctorProfile.find({ 
+      status: "Approved" 
+    })
+    .skip(skip)
+    .limit(limitNum)
+    .sort({ createdAt: -1 });
+
+    // Get total count for pagination
+    const total = await DoctorProfile.countDocuments({ status: "Approved" });
+
+    return res.status(200).json({ 
+      success: true, 
+      data: approvedDoctors,
+      pagination: {
+        page: pageNum,
+        limit: limitNum,
+        total,
+        pages: Math.ceil(total / limitNum)
+      }
+    });
+  } catch (err) {
+    return res.status(500).json({ success: false, message: err.message });
   }
 };
 

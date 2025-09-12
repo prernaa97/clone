@@ -75,8 +75,25 @@ export const getClinicById = async (req, res) => {
 
     const clinic = await Clinic.findById(id).populate("doctorId", "name email");
     if (!clinic) return res.status(404).json({ success: false, message: "Clinic not found" });
-    console.log("Clinic DocterId: ". clinic);
+    console.log("Clinic DocterId: ", clinic);
     res.status(200).json({ success: true, data: clinic });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// Get clinic by Doctor ID
+export const getClinicByDoctorId = async (req, res) => {
+  try {
+    const { doctorId } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(doctorId))
+      return res.status(400).json({ success: false, message: "Invalid doctor ID" });
+
+    const clinic = await Clinic.findOne({ doctorId }).populate("doctorId", "name email");
+    if (!clinic) return res.status(404).json({ success: false, message: "Clinic not found for this doctor" });
+    
+    res.status(200).json({ success: true, clinic: clinic });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }

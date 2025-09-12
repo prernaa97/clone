@@ -27,8 +27,15 @@ export const createClinicWithSlots = async (req, res) => {
   try {
     session.startTransaction();
 
-    const { doctorId, clinicName, clinicAddress, city, consultationFee, clinicTiming, generateDays } = req.body;
-    if (!doctorId || !clinicName || !clinicAddress || !city || !consultationFee || !clinicTiming) {
+    // Get doctorId from authenticated user (token)
+    const doctorId = req.user?.id;
+    const { clinicName, clinicAddress, city, consultationFee, clinicTiming, generateDays } = req.body;
+    
+    if (!doctorId) {
+      await session.abortTransaction();
+      return res.status(401).json({ success: false, message: "User authentication required" });
+    }
+    if (!clinicName || !clinicAddress || !city || !consultationFee || !clinicTiming) {
       await session.abortTransaction();
       return res.status(400).json({ success: false, message: "All required fields must be provided" });
     }
@@ -221,11 +228,11 @@ export const createManySlots = async (req, res) => {
   }
 };
 
-// Get slots for a doctor (optional query params: from, to, availability)
+// Get slots for a doctor (optional query params: from, to, availability, page, limit)
 export const getSlotsByDoctor = async (req, res) => {
   try {
     const { doctorId } = req.params;
-    const { from, to, availability } = req.query;
+    const { from, to, availability, page = 1, limit = 20 } = req.query;
 
     const q = { doctorId };
     if (availability) q.availability = availability;
@@ -233,8 +240,30 @@ export const getSlotsByDoctor = async (req, res) => {
     if (from) q.start.$gte = new Date(from);
     if (to) q.start.$lte = new Date(to);
 
-    const slots = await Slot.find(q).sort({ start: 1 });
-    return res.status(200).json({ success: true, data: slots });
+    // Convert page and limit to numbers
+    const pageNum = parseInt(page, 10);
+    const limitNum = parseInt(limit, 10);
+    const skip = (pageNum - 1) * limitNum;
+
+    // Get total count for pagination
+    const total = await Slot.countDocuments(q);
+    
+    // Get paginated slots
+    const slots = await Slot.find(q)
+      .sort({ start: 1 })
+      .skip(skip)
+      .limit(limitNum);
+
+    return res.status(200).json({ 
+      success: true, 
+      data: slots,
+      pagination: {
+        page: pageNum,
+        limit: limitNum,
+        total,
+        pages: Math.ceil(total / limitNum)
+      }
+    });
   } catch (err) {
     return res.status(500).json({ success: false, message: err.message });
   }
